@@ -19,7 +19,7 @@ spaday-dagre .spaday-dagre-node rect {
 }
 
 spaday-dagre .spaday-dagre-node text {
-  fill: var(--spa-muted, #666);
+  fill: #3f464d;
   font:
     12px system-ui,
     sans-serif;
@@ -40,7 +40,7 @@ spaday-dagre .spaday-dagre-edge-label {
   paint-order: stroke;
   stroke: var(--spa-surface, #fff);
   stroke-width: 3;
-  pointer-events: none;
+  cursor: pointer;
 }
 
 spaday-dagre .spaday-dagre-arrow path {
@@ -48,25 +48,25 @@ spaday-dagre .spaday-dagre-arrow path {
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-node rect {
-  fill: var(--spa-surface-2, #1d232b);
-  stroke: var(--spa-border, #333b45);
+  fill: #242d38;
+  stroke: #4a5663;
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-node text {
-  fill: var(--spa-muted, #9aa3ad);
+  fill: #d7dce2;
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-edge-line {
-  stroke: var(--spa-border, #333b45);
+  stroke: #5a6672;
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-edge-label {
-  fill: var(--spa-muted, #9aa3ad);
-  stroke: var(--spa-surface, #15191e);
+  fill: #aab3bd;
+  stroke: #15191e;
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-arrow path {
-  fill: var(--spa-border, #333b45);
+  fill: #5a6672;
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-node rect {
@@ -75,7 +75,7 @@ spaday-dagre .spaday-dagre-arrow path {
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-node text {
-  fill: var(--spa-muted, #666);
+  fill: #3f464d;
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-edge-line {
@@ -117,11 +117,11 @@ spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-node:hover rect {
-  stroke: var(--spa-muted, #9aa3ad);
+  stroke: #8fb4dd;
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
-  stroke: var(--spa-muted, #9aa3ad);
+  stroke: #8fb4dd;
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-node:hover rect {
@@ -132,5 +132,19 @@ spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
   spaday-dagre
   .spaday-dagre-edge:hover
   .spaday-dagre-edge-line {
+  stroke: var(--spa-muted, #666);
+}
+
+/* endpoints of a hovered or clicked edge light up with the edge */
+spaday-dagre .spaday-dagre-node.spaday-dagre-connected rect {
+  stroke: var(--spa-muted, #666);
+  stroke-width: 1.5;
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-node.spaday-dagre-connected rect {
+  stroke: #8fb4dd;
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-node.spaday-dagre-connected rect {
   stroke: var(--spa-muted, #666);
 }

@@ -174,6 +174,7 @@ class SpadayDagre extends HTMLElement {
             detail: {
               source: edge.getAttribute("data-edge-source"),
               target: edge.getAttribute("data-edge-target"),
+              label: edge.getAttribute("data-edge-label") ?? undefined,
             },
             bubbles: true,
             composed: true,
@@ -422,6 +423,19 @@ class SpadayDagre extends HTMLElement {
           "data-edge-source": edge.source,
           "data-edge-target": edge.target,
         });
+        // hovering an edge lights up both endpoint nodes along with the line
+        const endpoints = () => [
+          this.#nodeEls.get(edge.source),
+          this.#nodeEls.get(edge.target),
+        ];
+        group.addEventListener("pointerenter", () => {
+          for (const node of endpoints())
+            node?.classList.add("spaday-dagre-connected");
+        });
+        group.addEventListener("pointerleave", () => {
+          for (const node of endpoints())
+            node?.classList.remove("spaday-dagre-connected");
+        });
         // a wide transparent twin of the visible path, so thin edges are hoverable
         group.append(
           el("path", { class: "spaday-dagre-edge-hit" }),
@@ -447,6 +461,8 @@ class SpadayDagre extends HTMLElement {
         "class",
         `spaday-dagre-edge ${edge.class ?? ""}`.trim(),
       );
+      if (edge.label) group.setAttribute("data-edge-label", edge.label);
+      else group.removeAttribute("data-edge-label");
       const text = group.querySelector("text");
       if (text) text.textContent = edge.label ?? "";
       const from = this.#edgeLaid.get(key);

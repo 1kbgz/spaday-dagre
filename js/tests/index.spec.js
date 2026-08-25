@@ -49,7 +49,7 @@ test("bubbles scalar node clicks and object edge clicks", async ({ page }) => {
     const graph = document.createElement("spaday-dagre");
     graph.graph = {
       nodes: [{ id: "a" }, { id: "b" }],
-      edges: [{ source: "a", target: "b" }],
+      edges: [{ source: "a", target: "b", label: "flow" }],
     };
     document.body.appendChild(graph);
     const seen = [];
@@ -59,12 +59,41 @@ test("bubbles scalar node clicks and object edge clicks", async ({ page }) => {
       .querySelector('[data-node-id="a"] rect')
       .dispatchEvent(new MouseEvent("click", { bubbles: true }));
     graph
-      .querySelector("[data-edge-source] path")
+      .querySelector(".spaday-dagre-edge-hit")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    // the label itself is a click target for its edge
+    graph
+      .querySelector(".spaday-dagre-edge-label")
       .dispatchEvent(new MouseEvent("click", { bubbles: true }));
     return seen;
   });
   expect(r[0]).toBe("a"); // scalar detail — event_value() lands the id in the store
-  expect(r[1]).toEqual({ source: "a", target: "b" });
+  expect(r[1]).toEqual({ source: "a", target: "b", label: "flow" });
+  expect(r[2]).toEqual({ source: "a", target: "b", label: "flow" });
+});
+
+test("hovering an edge highlights its endpoint nodes", async ({ page }) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.transition = 0;
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      edges: [{ source: "a", target: "b" }],
+    };
+    document.body.appendChild(graph);
+    const edge = graph.querySelector("[data-edge-source]");
+    const connected = () =>
+      [...graph.querySelectorAll(".spaday-dagre-connected")].map((n) =>
+        n.getAttribute("data-node-id"),
+      );
+    edge.dispatchEvent(new PointerEvent("pointerenter"));
+    const during = connected();
+    edge.dispatchEvent(new PointerEvent("pointerleave"));
+    return { during, after: connected() };
+  });
+  expect(r.during.sort()).toEqual(["a", "b"]); // both ends, not the bystander c
+  expect(r.after).toEqual([]);
 });
 
 test("follows the wa-dark page mode on shell tokens", async ({ page }) => {
@@ -82,7 +111,7 @@ test("follows the wa-dark page mode on shell tokens", async ({ page }) => {
     return { light, dark, back: fill() };
   });
   expect(r.light).toBe("rgb(250, 250, 250)"); // --spa-surface-2 light default
-  expect(r.dark).toBe("rgb(29, 35, 43)"); // #1d232b, the shell's dark surface
+  expect(r.dark).toBe("rgb(36, 45, 56)"); // #242d38, tuned for contrast on dark pages
   expect(r.back).toBe("rgb(250, 250, 250)");
 });
 
@@ -113,7 +142,7 @@ test("runs the Python example: click selects, dark mode re-themes", async ({
         .locator('spaday-dagre [data-node-id="ingest"] rect')
         .evaluate((el) => getComputedStyle(el).fill),
     )
-    .toBe("rgb(29, 35, 43)"); // bind_root_class("wa-dark") re-themes the graph
+    .toBe("rgb(36, 45, 56)"); // bind_root_class("wa-dark") re-themes the graph
 });
 
 test("zooms at the cursor, pans by drag, resets on double-click", async ({
