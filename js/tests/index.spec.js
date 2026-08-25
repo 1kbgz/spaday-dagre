@@ -346,3 +346,29 @@ test("right-click dispatches enriched contextmenu events with graph context", as
   });
   expect(r.native).toBe(1); // suppressed over shapes, kept on the background
 });
+
+test("the example's node context menu opens at the pointer with graph context", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:8016");
+  const node = page.locator('spaday-dagre [data-node-id="evaluate"] rect');
+  await expect(node).toBeVisible();
+  await node.click({ button: "right" });
+
+  const menu = page.locator("#node-menu");
+  await expect(menu).toBeVisible();
+  await expect(menu.locator("strong")).toHaveText("evaluate"); // captured context drives the items
+  const nodeBox = await node.boundingBox();
+  const menuBox = await menu.boundingBox();
+  expect(Math.abs(menuBox.x - (nodeBox.x + nodeBox.width / 2)) < 60).toBe(true); // at the pointer
+
+  await menu.getByRole("button", { name: "Select", exact: true }).click();
+  await expect(page.locator(".status strong")).toHaveText("evaluate");
+  await expect(menu).toBeHidden(); // the item's action closed the popup
+
+  // reopen, then light-dismiss with a click elsewhere
+  await node.click({ button: "right" });
+  await expect(menu).toBeVisible();
+  await page.locator("h1").click();
+  await expect(menu).toBeHidden();
+});
