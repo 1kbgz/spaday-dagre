@@ -5,7 +5,20 @@
 
 spaday-dagre {
   display: block;
-  position: relative; /* anchors the optional control overlay */
+}
+
+/* shrink-wraps the svg so the control overlay anchors to the graph's box */
+spaday-dagre .spaday-dagre-frame {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+/* with controls enabled, a reserved gutter keeps the D-pad beside the graph, never over it */
+spaday-dagre .spaday-dagre-frame.spaday-dagre-has-controls {
+  box-sizing: border-box;
+  padding-right: 96px;
 }
 
 spaday-dagre svg {
@@ -170,7 +183,7 @@ spaday-dagre
 /* optional view controls (`controls` prop): pan arrows around a center reset circle */
 spaday-dagre .spaday-dagre-controls {
   position: absolute;
-  right: 10px;
+  right: 0;
   bottom: 10px;
   display: grid;
   grid-template-areas:

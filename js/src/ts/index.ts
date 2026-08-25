@@ -302,7 +302,12 @@ class SpadayDagre extends HTMLElement {
     this.#svg = svg;
     this.#viewport = viewport;
     this.#wireZoom(svg);
-    this.replaceChildren(svg);
+    // the frame shrink-wraps the svg (inline-block), so the control overlay anchors to the
+    // graph's own box rather than the host's full width
+    const frame = document.createElement("div");
+    frame.className = "spaday-dagre-frame";
+    frame.append(svg);
+    this.replaceChildren(frame);
     this.#syncControls();
     return { svg, viewport };
   }
@@ -348,6 +353,7 @@ class SpadayDagre extends HTMLElement {
     if (!this.#controls || !this.#svg) {
       this.#controlsEl?.remove();
       this.#controlsEl = null;
+      this.#svg?.parentElement?.classList.remove("spaday-dagre-has-controls");
       return;
     }
     if (!this.#controlsEl) {
@@ -375,7 +381,10 @@ class SpadayDagre extends HTMLElement {
       button("\u2193", "Pan down", "down", () => this.#pan(0, PAN_STEP));
       this.#controlsEl = pad;
     }
-    if (this.#controlsEl.parentNode !== this) this.append(this.#controlsEl);
+    const frame = this.#svg.parentElement;
+    if (frame && this.#controlsEl.parentNode !== frame)
+      frame.append(this.#controlsEl);
+    frame?.classList.add("spaday-dagre-has-controls");
   }
 
   // client pixel -> svg user units (the svg may be shrunk by max-width: 100%)

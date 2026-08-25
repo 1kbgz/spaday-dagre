@@ -451,10 +451,15 @@ test("optional controls pan the diagram and reset the view", async ({
     const panned = { ...graph.view };
     pad.querySelector('[title="Reset view"]').click();
     const reset = { ...graph.view };
+    const padRect = pad.getBoundingClientRect();
+    const svgRect = graph.querySelector("svg").getBoundingClientRect();
     graph.controls = false;
     return {
       before,
       buttons: pad.querySelectorAll("button").length,
+      // beside the graph in its reserved gutter: adjacent but never overlapping
+      nearGraph:
+        padRect.left >= svgRect.right - 1 && padRect.left - svgRect.right < 24,
       panned,
       reset,
       removed: !graph.querySelector(".spaday-dagre-controls"),
@@ -462,6 +467,7 @@ test("optional controls pan the diagram and reset the view", async ({
   });
   expect(r.before).toBe(false); // opt-in
   expect(r.buttons).toBe(5);
+  expect(r.nearGraph).toBe(true); // anchored to the graph's box, not the host's full width
   expect(r.panned).toEqual({ x: 60, y: 60, k: 1 }); // arrows nudge by a step
   expect(r.reset).toEqual({ x: 0, y: 0, k: 1 });
   expect(r.removed).toBe(true);
