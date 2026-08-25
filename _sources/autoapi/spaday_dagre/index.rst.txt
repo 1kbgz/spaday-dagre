@@ -1,0 +1,56 @@
+spaday_dagre
+============
+
+.. py:module:: spaday_dagre
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/spaday_dagre/components/index
+   /autoapi/spaday_dagre/example/index
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   spaday_dagre.package
+   spaday_dagre.Dagre
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   spaday_dagre.SpadayDagre
+
+
+Package Contents
+----------------
+
+.. py:class:: SpadayDagre(*children: spaday.component.Child, key: str | None = None, graph: Any = None, layout: Any = None, **props: Any)
+
+   Bases: :py:obj:`spaday.component.Component`
+
+
+   Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config.
+
+
+   .. py:attribute:: tag
+      :value: 'spaday-dagre'
+
+
+
+   .. py:attribute:: schema
+
+
+.. py:data:: package
+
+.. py:data:: Dagre
+

@@ -1,0 +1,33 @@
+spaday_dagre.components
+=======================
+
+.. py:module:: spaday_dagre.components
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   spaday_dagre.components.SpadayDagre
+
+
+Module Contents
+---------------
+
+.. py:class:: SpadayDagre(*children: spaday.component.Child, key: str | None = None, graph: Any = None, layout: Any = None, **props: Any)
+
+   Bases: :py:obj:`spaday.component.Component`
+
+
+   Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config.
+
+
+   .. py:attribute:: tag
+      :value: 'spaday-dagre'
+
+
+
+   .. py:attribute:: schema
+
+
