@@ -330,6 +330,9 @@ class SpadayDagre extends HTMLElement {
   #syncWindow(): void {
     const svg = this.#svg;
     if (!svg) return;
+    // the natural-height fallback must never override an author-sized host (min-height
+    // beats height), so re-measure without it each time and reapply only if still unsized
+    if (this.style.minHeight) this.style.minHeight = "";
     if (!this.clientHeight && this.#graphSize.h)
       this.style.minHeight = `${this.#graphSize.h}px`;
     const w = this.clientWidth || this.#graphSize.w;
