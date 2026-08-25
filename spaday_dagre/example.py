@@ -1,6 +1,6 @@
-"""A small pipeline DAG: store-driven graph mutation, node-click status, a node
-context menu, and the spaday page-mode theme convention (``wa-dark``) re-theming
-the graph.
+"""A small pipeline DAG: store-driven graph mutation, node shapes, node-click
+status, a node context menu, view controls, and the spaday page-mode theme
+convention (``wa-dark``) re-theming the graph.
 
 Run ``python -m spaday_dagre.example`` and open http://127.0.0.1:8016.
 """
@@ -15,10 +15,10 @@ GRAPH = {
     "nodes": [
         {"id": "ingest", "label": "Ingest"},
         {"id": "clean", "label": "Clean"},
-        {"id": "features", "label": "Features"},
+        {"id": "features", "label": "Features", "shape": "diamond"},
         {"id": "train", "label": "Train"},
         {"id": "evaluate", "label": "Evaluate"},
-        {"id": "deploy", "label": "Deploy", "class": "deploy"},
+        {"id": "deploy", "label": "Deploy", "class": "deploy", "shape": "ellipse"},
     ],
     "edges": [
         {"source": "ingest", "target": "clean"},
