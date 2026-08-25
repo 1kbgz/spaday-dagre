@@ -5,25 +5,20 @@
 
 spaday-dagre {
   display: block;
+  position: relative;
 }
 
-/* fills the host — the component's size dictates the frame, and CSS percentages track
- * resizes natively — and centers the graph within it */
+/* fills the host without contributing to its auto height — the component's size dictates
+ * the window, and the graph moves across it via the view transform */
 spaday-dagre .spaday-dagre-frame {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
+  inset: 0;
 }
 
 spaday-dagre svg {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  height: auto;
+  width: 100%;
+  height: 100%;
 }
 
 spaday-dagre .spaday-dagre-node :is(rect, ellipse, polygon) {

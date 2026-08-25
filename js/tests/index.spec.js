@@ -167,6 +167,7 @@ test("zooms at the cursor, pans by drag, resets on double-click", async ({
     };
     document.body.appendChild(graph);
     const svg = graph.querySelector("svg");
+    const initial = graph.view; // fit-and-centered on mount
     const clicks = [];
     graph.addEventListener("dagre-node-click", (e) => clicks.push(e.detail));
     const rect = svg.getBoundingClientRect();
@@ -205,12 +206,12 @@ test("zooms at the cursor, pans by drag, resets on double-click", async ({
       .querySelector('[data-node-id="a"] rect')
       .dispatchEvent(new MouseEvent("click", { bubbles: true }));
     svg.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
-    return { zoomed, panned, reset: graph.view, clicks };
+    return { initial, zoomed, panned, reset: graph.view, clicks };
   });
   expect(r.zoomed.k).toBeGreaterThan(1); // wheel-up zooms in
   expect(r.panned.x).not.toBe(r.zoomed.x); // drag panned the viewport
   expect(r.clicks).toEqual([]); // pan suppressed the click
-  expect(r.reset).toEqual({ x: 0, y: 0, k: 1 }); // double-click resets
+  expect(r.reset).toEqual(r.initial); // double-click restores the fit-and-centered view
 });
 
 test("re-layout animates while preserving element identity", async ({
@@ -383,11 +384,20 @@ test("panning is clamped so the graph cannot be dragged out of view", async ({
       nodes: [{ id: "a" }, { id: "b" }],
       edges: [{ source: "a", target: "b" }],
     };
+    graph.style.cssText = "width:600px;height:400px";
     document.body.appendChild(graph);
     const svg = graph.querySelector("svg");
-    const w = Number(svg.getAttribute("width"));
-    const h = Number(svg.getAttribute("height"));
+    const viewport = graph.querySelector(".spaday-dagre-viewport");
     const rect = svg.getBoundingClientRect();
+    // how much of the graph remains visible inside the window
+    const visible = () => {
+      const v = viewport.getBoundingClientRect();
+      const s = svg.getBoundingClientRect();
+      return {
+        w: Math.min(v.right, s.right) - Math.max(v.left, s.left),
+        h: Math.min(v.bottom, s.bottom) - Math.max(v.top, s.top),
+      };
+    };
     const down = (x, y) =>
       svg.dispatchEvent(
         new PointerEvent("pointerdown", {
@@ -413,19 +423,18 @@ test("panning is clamped so the graph cannot be dragged out of view", async ({
     down(5, 5);
     move(rect.width * 40, rect.height * 40);
     up();
-    const dragged = { ...graph.view };
+    const dragged = visible();
     // and hard toward the top-left
     down(5, 5);
     move(-rect.width * 40, -rect.height * 40);
     up();
-    return { w, h, dragged, opposite: { ...graph.view } };
+    return { dragged, opposite: visible() };
   });
-  const mx = Math.min(48, r.w / 2); // small graphs keep at least half their extent visible
-  const my = Math.min(48, r.h / 2);
-  expect(r.dragged.x).toBeLessThanOrEqual(r.w - mx + 1); // graph edge still inside
-  expect(r.dragged.y).toBeLessThanOrEqual(r.h - my + 1);
-  expect(r.opposite.x).toBeGreaterThanOrEqual(mx - r.w - 1); // k=1: right edge stays visible
-  expect(r.opposite.y).toBeGreaterThanOrEqual(my - r.h - 1);
+  // after arbitrarily hard drags, a usable chunk of the graph is still inside the window
+  expect(r.dragged.w).toBeGreaterThan(20);
+  expect(r.dragged.h).toBeGreaterThan(20);
+  expect(r.opposite.w).toBeGreaterThan(20);
+  expect(r.opposite.h).toBeGreaterThan(20);
 });
 
 test("optional controls pan the diagram and reset the view", async ({
@@ -442,7 +451,9 @@ test("optional controls pan the diagram and reset the view", async ({
       ],
       edges: [{ source: "a", target: "b" }],
     };
+    graph.style.cssText = "width:800px;height:600px";
     document.body.appendChild(graph);
+    const initial = graph.view; // fit-and-centered on mount
     const before = !!graph.querySelector(".spaday-dagre-controls");
     graph.controls = true;
     const pad = graph.querySelector(".spaday-dagre-controls");
@@ -452,14 +463,19 @@ test("optional controls pan the diagram and reset the view", async ({
     pad.querySelector('[title="Reset view"]').click();
     const reset = { ...graph.view };
     const padRect = pad.getBoundingClientRect();
-    const svgRect = graph.querySelector("svg").getBoundingClientRect();
+    const frameRect = graph
+      .querySelector(".spaday-dagre-frame")
+      .getBoundingClientRect();
     graph.controls = false;
     return {
+      initial,
       before,
       buttons: pad.querySelectorAll("button").length,
-      // beside the graph in its reserved gutter: adjacent but never overlapping
-      nearGraph:
-        padRect.left >= svgRect.right - 1 && padRect.left - svgRect.right < 24,
+      // the pad sits inside the window's bottom-right corner
+      inWindow:
+        padRect.right <= frameRect.right &&
+        padRect.bottom <= frameRect.bottom &&
+        padRect.left > frameRect.left + frameRect.width / 2,
       panned,
       reset,
       removed: !graph.querySelector(".spaday-dagre-controls"),
@@ -467,9 +483,10 @@ test("optional controls pan the diagram and reset the view", async ({
   });
   expect(r.before).toBe(false); // opt-in
   expect(r.buttons).toBe(5);
-  expect(r.nearGraph).toBe(true); // anchored to the graph's box, not the host's full width
-  expect(r.panned).toEqual({ x: 60, y: 60, k: 1 }); // arrows nudge by a step
-  expect(r.reset).toEqual({ x: 0, y: 0, k: 1 });
+  expect(r.inWindow).toBe(true);
+  // arrows nudge by a step from the centered initial view
+  expect(r.panned).toEqual({ x: r.initial.x + 60, y: r.initial.y + 60, k: 1 });
+  expect(r.reset).toEqual(r.initial); // the center circle restores fit-and-center
   expect(r.removed).toBe(true);
 });
 
@@ -507,9 +524,10 @@ test("the frame tracks the host's size, including dynamic resize", async ({
   expect(r.sized.frame.height).toBeCloseTo(r.sized.host.height, 0);
   expect(r.resized.frame.width).toBeCloseTo(r.resized.host.width, 0);
   expect(r.resized.frame.height).toBeCloseTo(r.resized.host.height, 0);
-  // the graph centers in a larger frame and scales down into a smaller one
-  expect(r.sized.svg.left).toBeGreaterThan(r.sized.frame.left);
-  expect(r.resized.svg.height).toBeLessThanOrEqual(r.resized.frame.height + 1);
+  // the svg window fills the frame edge to edge, before and after resize
+  expect(r.sized.svg.left).toBeCloseTo(r.sized.frame.left, 0);
+  expect(r.sized.svg.width).toBeCloseTo(r.sized.frame.width, 0);
+  expect(r.resized.svg.height).toBeCloseTo(r.resized.frame.height, 0);
   // the observer kept the control pad inside the shrunken frame
   expect(r.pad.right).toBeLessThanOrEqual(r.resized.frame.right + 1);
   expect(r.pad.bottom).toBeLessThanOrEqual(r.resized.frame.bottom + 1);

@@ -148,19 +148,26 @@ class SpadayDagre extends HTMLElement {
   #nodeLaid = new Map<string, NodeLaid>();
   #edgeLaid = new Map<string, EdgeLaid>();
   #view = { x: 0, y: 0, k: 1 };
+  // the window is the component's own size (1 css px = 1 user unit); the graph's natural
+  // extent moves within it via the view transform
+  #window = { w: 0, h: 0 };
+  #graphSize = { w: 0, h: 0 };
+  #centered = false;
   #controls = false;
   #controlsEl: HTMLDivElement | null = null;
-  // keeps the control pad beside the graph as the host or graph resizes
+  // tracks the host's size: the svg window and the control pad follow it
   #resize =
     typeof ResizeObserver !== "undefined"
-      ? new ResizeObserver(() => this.#placeControls())
+      ? new ResizeObserver(() => this.#syncWindow())
       : null;
   #frame = 0;
   #dragged = false;
 
   connectedCallback(): void {
     this.style.display ||= "block";
+    this.#resize?.observe(this);
     if (!this.#rendered) this.#render();
+    else this.#syncWindow(); // rendered while disconnected: adopt the real size now
     this.addEventListener("click", (event) => {
       if (this.#dragged) return; // a pan, not a selection
       const target = event.target as Element;
@@ -317,23 +324,42 @@ class SpadayDagre extends HTMLElement {
     return { svg, viewport };
   }
 
+  // Size the svg window to the component: the graph pans across the component's full
+  // extents, not just its own natural box. An absolutely positioned frame contributes no
+  // auto height, so an unsized host defaults to the graph's natural height.
+  #syncWindow(): void {
+    const svg = this.#svg;
+    if (!svg) return;
+    if (!this.clientHeight && this.#graphSize.h)
+      this.style.minHeight = `${this.#graphSize.h}px`;
+    const w = this.clientWidth || this.#graphSize.w;
+    const h = this.clientHeight || this.#graphSize.h;
+    if (!w || !h) return;
+    this.#window = { w, h };
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svg.setAttribute("width", String(w));
+    svg.setAttribute("height", String(h));
+    if (this.#centered) this.#applyView();
+    else if (this.#graphSize.w) {
+      this.#resetView();
+      // a fallback-sized window (rendered while disconnected) centers again once the
+      // component's real size is measurable
+      this.#centered = this.clientWidth > 0;
+    }
+    this.#placeControls();
+  }
+
   #applyView(): void {
     // clamp the pan so at least EDGE_MARGIN of the graph stays inside the window — a drag or
     // zoom can never strand the diagram entirely off-screen
-    const svg = this.#svg;
-    const w = Number(svg?.getAttribute("width")) || 0;
-    const h = Number(svg?.getAttribute("height")) || 0;
-    if (w && h) {
-      const mx = Math.min(EDGE_MARGIN, w / 2);
-      const my = Math.min(EDGE_MARGIN, h / 2);
-      this.#view.x = Math.max(
-        mx - w * this.#view.k,
-        Math.min(this.#view.x, w - mx),
-      );
-      this.#view.y = Math.max(
-        my - h * this.#view.k,
-        Math.min(this.#view.y, h - my),
-      );
+    const { w, h } = this.#window;
+    const { w: gw, h: gh } = this.#graphSize;
+    const k = this.#view.k;
+    if (w && h && gw && gh) {
+      const mx = Math.min(EDGE_MARGIN, w / 2, (gw * k) / 2);
+      const my = Math.min(EDGE_MARGIN, h / 2, (gh * k) / 2);
+      this.#view.x = Math.max(mx - gw * k, Math.min(this.#view.x, w - mx));
+      this.#view.y = Math.max(my - gh * k, Math.min(this.#view.y, h - my));
     }
     this.#viewport?.setAttribute(
       "transform",
@@ -347,8 +373,12 @@ class SpadayDagre extends HTMLElement {
     this.#applyView();
   }
 
+  // Fit-and-center: the whole graph visible, centered in the window (also the initial view).
   #resetView(): void {
-    this.#view = { x: 0, y: 0, k: 1 };
+    const { w, h } = this.#window;
+    const { w: gw, h: gh } = this.#graphSize;
+    const k = Math.max(MIN_ZOOM, Math.min(1, w / (gw || 1), h / (gh || 1)));
+    this.#view = { x: (w - gw * k) / 2, y: (h - gh * k) / 2, k };
     this.#applyView();
   }
 
@@ -358,7 +388,6 @@ class SpadayDagre extends HTMLElement {
     if (!this.#controls || !this.#svg) {
       this.#controlsEl?.remove();
       this.#controlsEl = null;
-      this.#resize?.disconnect();
       return;
     }
     if (!this.#controlsEl) {
@@ -387,11 +416,8 @@ class SpadayDagre extends HTMLElement {
       this.#controlsEl = pad;
     }
     const frame = this.#svg.parentElement;
-    if (frame && this.#controlsEl.parentNode !== frame) {
+    if (frame && this.#controlsEl.parentNode !== frame)
       frame.append(this.#controlsEl);
-      this.#resize?.observe(frame);
-      this.#resize?.observe(this.#svg);
-    }
     this.#placeControls();
   }
 
@@ -561,12 +587,10 @@ class SpadayDagre extends HTMLElement {
     }
     dagre.layout(g);
 
-    const { svg, viewport } = this.#ensureSvg();
+    const { viewport } = this.#ensureSvg();
     const { width = 0, height = 0 } = g.graph();
-    svg.setAttribute("viewBox", `0 0 ${Math.ceil(width)} ${Math.ceil(height)}`);
-    svg.setAttribute("width", String(Math.ceil(width)));
-    svg.setAttribute("height", String(Math.ceil(height)));
-    this.#applyView();
+    this.#graphSize = { w: Math.ceil(width), h: Math.ceil(height) };
+    this.#syncWindow();
 
     cancelAnimationFrame(this.#frame);
     const duration = this.#duration();
