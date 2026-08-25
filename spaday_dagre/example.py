@@ -185,7 +185,9 @@ def _active_rule(step: str) -> str:
             f'  spaday-dagre[data-active="{step}"] {edge} .spaday-dagre-edge-label '
             "{ fill: var(--spa-walk); }"
         )
-    return f'  spaday-dagre[data-active="{step}"] [data-node-id="{step}"] :is(rect, polygon, ellipse) {{ stroke: var(--spa-walk); stroke-width: 2; }}'
+    return (
+        f'  spaday-dagre[data-active="{step}"] [data-node-id="{step}"] :is(rect, polygon, ellipse) {{ stroke: var(--spa-walk); stroke-width: 2.5; }}'
+    )
 
 
 def _selected_edge_rule(edge: dict) -> str:
@@ -200,14 +202,17 @@ def _selected_edge_rule(edge: dict) -> str:
     )
 
 
+# the two layers stack and diff: selection owns the fill; while the walk visits a selected
+# element its stroke turns red (active rules come last, so they win the stroke at equal
+# specificity), and when the walk moves on the stroke falls back to the selection blue
 _HIGHLIGHTS = "\n".join(
-    [_active_rule(step) for step in STEPS]
-    + [
+    [
         f'  spaday-dagre[data-selected="{node}"] [data-node-id="{node}"] :is(rect, polygon, ellipse) '
         "{ fill: var(--spa-select-fill); stroke: var(--spa-accent); stroke-width: 2.5; }"
         for node in ORDER
     ]
     + [_selected_edge_rule(edge) for edge in GRAPH["edges"]]
+    + [_active_rule(step) for step in STEPS]
 )
 
 STYLES = f"""

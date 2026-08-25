@@ -420,6 +420,23 @@ test("the example is live over the wire: pushed highlights and echoed selection"
   await page.locator('spaday-dagre [data-node-id="clean"] rect').click();
   await expect(graph).toHaveAttribute("data-selected", "clean");
   await expect(page.locator(".status strong")).toHaveText("clean");
+
+  // the two highlight layers stack and diff: while the walk visits the selected node the
+  // stroke turns red over the blue selection fill; when it moves on, the stroke falls back
+  const styleAt = (active) =>
+    page.evaluate((value) => {
+      const el = document.querySelector("spaday-dagre");
+      el.setAttribute("data-active", value); // deterministic: bypass the sweep's timing
+      const rect = el.querySelector('[data-node-id="clean"] rect');
+      const cs = getComputedStyle(rect);
+      return { fill: cs.fill, stroke: cs.stroke };
+    }, active);
+  const visited = await styleAt("clean");
+  expect(visited.fill).toBe("rgb(227, 238, 252)"); // selection keeps the inside blue
+  expect(visited.stroke).toBe("rgb(217, 83, 74)"); // the walk borrows the outline in red
+  const departed = await styleAt("ingest");
+  expect(departed.fill).toBe("rgb(227, 238, 252)");
+  expect(departed.stroke).toBe("rgb(74, 144, 217)"); // and hands it back to the selection
 });
 
 test("panning is clamped so the graph cannot be dragged out of view", async ({
