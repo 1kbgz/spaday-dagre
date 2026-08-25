@@ -1,0 +1,51 @@
+# spaday-dagre
+
+dagre graph rendering for spaday
+
+[![Build Status](https://github.com/1kbgz/spaday-dagre/actions/workflows/build.yaml/badge.svg?branch=main&event=push)](https://github.com/1kbgz/spaday-dagre/actions/workflows/build.yaml)
+[![codecov](https://codecov.io/gh/1kbgz/spaday-dagre/branch/main/graph/badge.svg)](https://codecov.io/gh/1kbgz/spaday-dagre)
+[![License](https://img.shields.io/github/license/1kbgz/spaday-dagre)](https://github.com/1kbgz/spaday-dagre)
+[![PyPI](https://img.shields.io/pypi/v/spaday-dagre.svg)](https://pypi.python.org/pypi/spaday-dagre)
+
+## Overview
+
+`spaday-dagre` renders directed graphs in [spaday](https://1kbgz.github.io/spaday/) from a
+serializable node/edge config, laid out by [@dagrejs/dagre](https://github.com/dagrejs/dagre) and
+drawn as light-DOM SVG. Colors ride the spaday shell's `--spa-*` tokens, so
+`bind_root_class("wa-dark", ...)` re-themes the graph with the rest of the page, and application CSS
+reaches every shape. `dagre-node-click` bubbles the node id (scalar `detail`, so
+`SetField("selected", event_value())` just works); `dagre-edge-click` bubbles `{source, target}`.
+
+## Quick example
+
+```python
+from spaday import element
+from spaday.backends.starlette import serve
+from spaday_dagre import Dagre, package
+
+graph = Dagre(
+    graph={
+        "nodes": [{"id": "a", "label": "Alpha"}, {"id": "b"}],
+        "edges": [{"source": "a", "target": "b", "label": "flow"}],
+    },
+    layout={"rankdir": "LR"},
+)
+app = serve(element("main").child(graph), packages=[package])
+```
+
+Node sizes default from label measurement; per-node `width`/`height`/`class` and per-edge
+`label`/`class` override. `layout` passes through to dagre (`rankdir`, `align`, `nodesep`,
+`ranksep`, `edgesep`, `marginx`/`marginy`, `ranker`). Installing the package registers the `dagre`
+entry point, so `packages=["dagre"]` also works.
+
+## Run the local example
+
+```bash
+python -m spaday_dagre.example
+```
+
+Open <http://127.0.0.1:8016>: a pipeline DAG with direction switching, node selection, and the
+dark-mode toggle.
+
+> [!NOTE]
+> This library was generated using [copier](https://copier.readthedocs.io/en/stable/) from the [Base Python Project Template repository](https://github.com/python-project-templates/base).

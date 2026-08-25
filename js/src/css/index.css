@@ -1,0 +1,92 @@
+/* Graph colors ride the spaday shell's --spa-* tokens, following spaday's page-mode
+ * convention: `wa-dark` on the root re-themes the graph, `wa-light` flips a nested
+ * island back, and an application that re-themes the shell carries the graph with it.
+ * The fallbacks keep a standalone page coherent in both modes. */
+
+spaday-dagre {
+  display: block;
+}
+
+spaday-dagre svg {
+  max-width: 100%;
+  height: auto;
+}
+
+spaday-dagre .spaday-dagre-node rect {
+  fill: var(--spa-surface-2, #fafafa);
+  stroke: var(--spa-border, #e6e6e6);
+  stroke-width: 1;
+}
+
+spaday-dagre .spaday-dagre-node text {
+  fill: var(--spa-muted, #666);
+  font:
+    12px system-ui,
+    sans-serif;
+  pointer-events: none; /* labels must not intercept node clicks */
+}
+
+spaday-dagre .spaday-dagre-edge path {
+  fill: none;
+  stroke: var(--spa-border, #e6e6e6);
+  stroke-width: 1.5;
+}
+
+spaday-dagre .spaday-dagre-edge-label {
+  fill: var(--spa-muted, #666);
+  font:
+    11px system-ui,
+    sans-serif;
+  paint-order: stroke;
+  stroke: var(--spa-surface, #fff);
+  stroke-width: 3;
+  pointer-events: none;
+}
+
+spaday-dagre .spaday-dagre-arrow path {
+  fill: var(--spa-border, #e6e6e6);
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-node rect {
+  fill: var(--spa-surface-2, #1d232b);
+  stroke: var(--spa-border, #333b45);
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-node text {
+  fill: var(--spa-muted, #9aa3ad);
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-edge path {
+  stroke: var(--spa-border, #333b45);
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-edge-label {
+  fill: var(--spa-muted, #9aa3ad);
+  stroke: var(--spa-surface, #15191e);
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-arrow path {
+  fill: var(--spa-border, #333b45);
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-node rect {
+  fill: var(--spa-surface-2, #fafafa);
+  stroke: var(--spa-border, #e6e6e6);
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-node text {
+  fill: var(--spa-muted, #666);
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-edge path {
+  stroke: var(--spa-border, #e6e6e6);
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-edge-label {
+  fill: var(--spa-muted, #666);
+  stroke: var(--spa-surface, #fff);
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-arrow path {
+  fill: var(--spa-border, #e6e6e6);
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0.0",
+  "modules": [
+    {
+      "path": "src/ts/index.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "SpadayDagre",
+          "customElement": true,
+          "tagName": "spaday-dagre",
+          "summary": "Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config.",
+          "attributes": [
+            {
+              "name": "graph",
+              "type": {
+                "text": "unknown"
+              },
+              "description": "The graph: {nodes: [{id, label, width, height, class}], edges: [{source, target, label, class}]}."
+            },
+            {
+              "name": "layout",
+              "type": {
+                "text": "unknown"
+              },
+              "description": "dagre layout options: rankdir (TB/BT/LR/RL), align, nodesep, edgesep, ranksep, marginx, marginy, ranker."
+            }
+          ],
+          "events": [
+            {
+              "name": "dagre-node-click",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "A node was clicked; detail is the node id."
+            },
+            {
+              "name": "dagre-edge-click",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "An edge was clicked; detail carries its source and target."
+            }
+          ],
+          "slots": []
+        }
+      ]
+    }
+  ]
+}
