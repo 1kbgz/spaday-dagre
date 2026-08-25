@@ -372,3 +372,97 @@ test("the example's node context menu opens at the pointer with graph context", 
   await page.locator("h1").click();
   await expect(menu).toBeHidden();
 });
+
+test("panning is clamped so the graph cannot be dragged out of view", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+    };
+    document.body.appendChild(graph);
+    const svg = graph.querySelector("svg");
+    const w = Number(svg.getAttribute("width"));
+    const h = Number(svg.getAttribute("height"));
+    const rect = svg.getBoundingClientRect();
+    const down = (x, y) =>
+      svg.dispatchEvent(
+        new PointerEvent("pointerdown", {
+          bubbles: true,
+          clientX: rect.left + x,
+          clientY: rect.top + y,
+          button: 0,
+          pointerId: 1,
+        }),
+      );
+    const move = (x, y) =>
+      svg.dispatchEvent(
+        new PointerEvent("pointermove", {
+          bubbles: true,
+          clientX: rect.left + x,
+          clientY: rect.top + y,
+          pointerId: 1,
+        }),
+      );
+    const up = () =>
+      svg.dispatchEvent(new PointerEvent("pointerup", { pointerId: 1 }));
+    // drag hard toward the bottom-right: without clamping the graph leaves the window
+    down(5, 5);
+    move(rect.width * 40, rect.height * 40);
+    up();
+    const dragged = { ...graph.view };
+    // and hard toward the top-left
+    down(5, 5);
+    move(-rect.width * 40, -rect.height * 40);
+    up();
+    return { w, h, dragged, opposite: { ...graph.view } };
+  });
+  const mx = Math.min(48, r.w / 2); // small graphs keep at least half their extent visible
+  const my = Math.min(48, r.h / 2);
+  expect(r.dragged.x).toBeLessThanOrEqual(r.w - mx + 1); // graph edge still inside
+  expect(r.dragged.y).toBeLessThanOrEqual(r.h - my + 1);
+  expect(r.opposite.x).toBeGreaterThanOrEqual(mx - r.w - 1); // k=1: right edge stays visible
+  expect(r.opposite.y).toBeGreaterThanOrEqual(my - r.h - 1);
+});
+
+test("optional controls pan the diagram and reset the view", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    // sized so two 60px pans stay inside the clamp bounds
+    graph.graph = {
+      nodes: [
+        { id: "a", width: 200, height: 200 },
+        { id: "b", width: 200, height: 200 },
+      ],
+      edges: [{ source: "a", target: "b" }],
+    };
+    document.body.appendChild(graph);
+    const before = !!graph.querySelector(".spaday-dagre-controls");
+    graph.controls = true;
+    const pad = graph.querySelector(".spaday-dagre-controls");
+    pad.querySelector('[title="Pan right"]').click();
+    pad.querySelector('[title="Pan down"]').click();
+    const panned = { ...graph.view };
+    pad.querySelector('[title="Reset view"]').click();
+    const reset = { ...graph.view };
+    graph.controls = false;
+    return {
+      before,
+      buttons: pad.querySelectorAll("button").length,
+      panned,
+      reset,
+      removed: !graph.querySelector(".spaday-dagre-controls"),
+    };
+  });
+  expect(r.before).toBe(false); // opt-in
+  expect(r.buttons).toBe(5);
+  expect(r.panned).toEqual({ x: 60, y: 60, k: 1 }); // arrows nudge by a step
+  expect(r.reset).toEqual({ x: 0, y: 0, k: 1 });
+  expect(r.removed).toBe(true);
+});

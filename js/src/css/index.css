@@ -5,6 +5,7 @@
 
 spaday-dagre {
   display: block;
+  position: relative; /* anchors the optional control overlay */
 }
 
 spaday-dagre svg {
@@ -164,4 +165,65 @@ spaday-dagre
   .spaday-dagre-node.spaday-dagre-connected
   :is(rect, ellipse, polygon) {
   stroke: var(--spa-accent, #4a90d9);
+}
+
+/* optional view controls (`controls` prop): pan arrows around a center reset circle */
+spaday-dagre .spaday-dagre-controls {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  grid-template-areas:
+    ". up ."
+    "left reset right"
+    ". down .";
+  gap: 2px;
+}
+
+spaday-dagre .spaday-dagre-controls button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font:
+    13px system-ui,
+    sans-serif;
+  color: var(--spa-muted, #666);
+  background: var(--spa-surface, #fff);
+  border: 1px solid var(--spa-border, #d0d0d0);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+spaday-dagre .spaday-dagre-controls button:hover {
+  color: var(--spa-accent, #4a90d9);
+  border-color: var(--spa-accent, #4a90d9);
+}
+
+spaday-dagre .spaday-dagre-controls .spaday-dagre-control-reset {
+  border-radius: 50%;
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-controls button {
+  color: #aab3bd;
+  background: #1d232b;
+  border-color: #333b45;
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-controls button:hover {
+  color: #8fb4dd;
+  border-color: #8fb4dd;
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-controls button {
+  color: var(--spa-muted, #666);
+  background: var(--spa-surface, #fff);
+  border-color: var(--spa-border, #d0d0d0);
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-controls button:hover {
+  color: var(--spa-accent, #4a90d9);
+  border-color: var(--spa-accent, #4a90d9);
 }

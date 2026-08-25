@@ -33,6 +33,7 @@ GRAPH = {
 graph = (
     Dagre(id="pipeline")
     .prop("graph", GRAPH)
+    .prop("controls", True)
     .compute("layout", obj({"rankdir": field("rankdir")}))
     .on("dagre-node-click", SetField("selected", event_value()))
     .on("dagre-edge-click", SetField("selected", event_value("label")))

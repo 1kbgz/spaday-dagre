@@ -42,6 +42,8 @@ const MIN_H = 32;
 const EDGE_SAMPLES = 24; // fixed point count so edge paths interpolate cleanly
 const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 8;
+const PAN_STEP = 60; // control-arrow pan distance, in svg user units
+const EDGE_MARGIN = 48; // minimum graph extent kept inside the window when panning/zooming
 
 let measureContext: CanvasRenderingContext2D | null = null;
 
@@ -146,6 +148,8 @@ class SpadayDagre extends HTMLElement {
   #nodeLaid = new Map<string, NodeLaid>();
   #edgeLaid = new Map<string, EdgeLaid>();
   #view = { x: 0, y: 0, k: 1 };
+  #controls = false;
+  #controlsEl: HTMLDivElement | null = null;
   #frame = 0;
   #dragged = false;
 
@@ -243,6 +247,15 @@ class SpadayDagre extends HTMLElement {
     return this.#zoomable;
   }
 
+  /** Overlay pan arrows and a center reset control on the graph (default false). */
+  set controls(value: boolean) {
+    this.#controls = Boolean(value);
+    this.#syncControls();
+  }
+  get controls(): boolean {
+    return this.#controls;
+  }
+
   /** Re-layout transition duration in ms; 0 disables (also disabled by reduced motion).
    * (Named `transition` because `animate` is the Web Animations API's Element.animate.) */
   set transition(value: number | null) {
@@ -290,14 +303,79 @@ class SpadayDagre extends HTMLElement {
     this.#viewport = viewport;
     this.#wireZoom(svg);
     this.replaceChildren(svg);
+    this.#syncControls();
     return { svg, viewport };
   }
 
   #applyView(): void {
+    // clamp the pan so at least EDGE_MARGIN of the graph stays inside the window — a drag or
+    // zoom can never strand the diagram entirely off-screen
+    const svg = this.#svg;
+    const w = Number(svg?.getAttribute("width")) || 0;
+    const h = Number(svg?.getAttribute("height")) || 0;
+    if (w && h) {
+      const mx = Math.min(EDGE_MARGIN, w / 2);
+      const my = Math.min(EDGE_MARGIN, h / 2);
+      this.#view.x = Math.max(
+        mx - w * this.#view.k,
+        Math.min(this.#view.x, w - mx),
+      );
+      this.#view.y = Math.max(
+        my - h * this.#view.k,
+        Math.min(this.#view.y, h - my),
+      );
+    }
     this.#viewport?.setAttribute(
       "transform",
       `translate(${this.#view.x} ${this.#view.y}) scale(${this.#view.k})`,
     );
+  }
+
+  #pan(dx: number, dy: number): void {
+    this.#view.x += dx;
+    this.#view.y += dy;
+    this.#applyView();
+  }
+
+  #resetView(): void {
+    this.#view = { x: 0, y: 0, k: 1 };
+    this.#applyView();
+  }
+
+  // Optional on-graph controls (GitHub's mermaid style): a D-pad whose arrows nudge the diagram
+  // in the arrow's direction, around a center circle that resets pan/zoom.
+  #syncControls(): void {
+    if (!this.#controls || !this.#svg) {
+      this.#controlsEl?.remove();
+      this.#controlsEl = null;
+      return;
+    }
+    if (!this.#controlsEl) {
+      const pad = document.createElement("div");
+      pad.className = "spaday-dagre-controls";
+      const button = (
+        label: string,
+        title: string,
+        area: string,
+        act: () => void,
+      ) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.title = title;
+        b.textContent = label;
+        b.style.gridArea = area;
+        b.className = `spaday-dagre-control-${area}`;
+        b.addEventListener("click", act);
+        pad.append(b);
+      };
+      button("\u2191", "Pan up", "up", () => this.#pan(0, -PAN_STEP));
+      button("\u2190", "Pan left", "left", () => this.#pan(-PAN_STEP, 0));
+      button("\u25cb", "Reset view", "reset", () => this.#resetView());
+      button("\u2192", "Pan right", "right", () => this.#pan(PAN_STEP, 0));
+      button("\u2193", "Pan down", "down", () => this.#pan(0, PAN_STEP));
+      this.#controlsEl = pad;
+    }
+    if (this.#controlsEl.parentNode !== this) this.append(this.#controlsEl);
   }
 
   // client pixel -> svg user units (the svg may be shrunk by max-width: 100%)
@@ -367,8 +445,7 @@ class SpadayDagre extends HTMLElement {
     svg.addEventListener("pointercancel", stop);
     svg.addEventListener("dblclick", () => {
       if (!this.#zoomable) return;
-      this.#view = { x: 0, y: 0, k: 1 };
-      this.#applyView();
+      this.#resetView();
     });
   }
 
