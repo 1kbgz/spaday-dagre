@@ -183,6 +183,40 @@ class SpadayDagre extends HTMLElement {
         );
       }
     });
+    this.addEventListener("contextmenu", (event) => {
+      // Right-clicking a node or edge dispatches an enriched contextmenu event carrying the
+      // graph context plus the pointer position, and suppresses the native menu over that
+      // shape (background right-clicks keep the browser menu). Pairs with spaday's
+      // `open_popup(x=event_value("detail.x"), y=event_value("detail.y"), ...)`.
+      const target = event.target as Element;
+      const node = target.closest("[data-node-id]");
+      const edge = node ? null : target.closest("[data-edge-source]");
+      if (!node && !edge) return;
+      event.preventDefault();
+      const position = { x: event.clientX, y: event.clientY };
+      if (node) {
+        this.dispatchEvent(
+          new CustomEvent("dagre-node-contextmenu", {
+            detail: { id: node.getAttribute("data-node-id"), ...position },
+            bubbles: true,
+            composed: true,
+          }),
+        );
+      } else if (edge) {
+        this.dispatchEvent(
+          new CustomEvent("dagre-edge-contextmenu", {
+            detail: {
+              source: edge.getAttribute("data-edge-source"),
+              target: edge.getAttribute("data-edge-target"),
+              label: edge.getAttribute("data-edge-label") ?? undefined,
+              ...position,
+            },
+            bubbles: true,
+            composed: true,
+          }),
+        );
+      }
+    });
   }
 
   set graph(value: DagreGraphConfig | null) {

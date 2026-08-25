@@ -288,3 +288,61 @@ test("renders diamond and ellipse node shapes", async ({ page }) => {
   expect(r.diamondPoints).toBe(4);
   expect(r.reshaped).toBe("rect");
 });
+
+test("right-click dispatches enriched contextmenu events with graph context", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.id = "ctx";
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b", label: "flow" }],
+    };
+    document.body.appendChild(graph);
+    window.__events = [];
+    window.__native = 0;
+    graph.addEventListener("dagre-node-contextmenu", (e) =>
+      window.__events.push({ kind: "node", ...e.detail }),
+    );
+    graph.addEventListener("dagre-edge-contextmenu", (e) =>
+      window.__events.push({ kind: "edge", ...e.detail }),
+    );
+    document.addEventListener("contextmenu", (e) => {
+      if (!e.defaultPrevented) window.__native += 1;
+    });
+  });
+
+  await page.evaluate(() => {
+    const graph = document.getElementById("ctx");
+    const menu = (el, x, y) =>
+      el.dispatchEvent(
+        new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          clientX: x,
+          clientY: y,
+        }),
+      );
+    menu(graph.querySelector('[data-node-id="a"] rect'), 40, 30);
+    menu(graph.querySelector(".spaday-dagre-edge-hit"), 38, 60);
+  });
+  await page.mouse.click(5, 5, { button: "right" }); // background: native menu kept
+
+  const r = await page.evaluate(() => ({
+    events: window.__events,
+    native: window.__native,
+  }));
+  expect(r.events).toHaveLength(2);
+  expect(r.events[0].kind).toBe("node");
+  expect(r.events[0].id).toBe("a");
+  expect(typeof r.events[0].x).toBe("number"); // pointer position rides the detail
+  expect(r.events[1]).toMatchObject({
+    kind: "edge",
+    source: "a",
+    target: "b",
+    label: "flow",
+  });
+  expect(r.native).toBe(1); // suppressed over shapes, kept on the background
+});
