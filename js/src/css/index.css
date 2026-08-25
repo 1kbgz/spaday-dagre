@@ -12,9 +12,9 @@ spaday-dagre svg {
   height: auto;
 }
 
-spaday-dagre .spaday-dagre-node rect {
+spaday-dagre .spaday-dagre-node :is(rect, ellipse, polygon) {
   fill: var(--spa-surface-2, #fafafa);
-  stroke: var(--spa-border, #e6e6e6);
+  stroke: var(--spa-muted, #666);
   stroke-width: 1;
 }
 
@@ -28,7 +28,7 @@ spaday-dagre .spaday-dagre-node text {
 
 spaday-dagre .spaday-dagre-edge-line {
   fill: none;
-  stroke: var(--spa-border, #e6e6e6);
+  stroke: var(--spa-muted, #666);
   stroke-width: 1.5;
 }
 
@@ -44,11 +44,11 @@ spaday-dagre .spaday-dagre-edge-label {
 }
 
 spaday-dagre .spaday-dagre-arrow path {
-  fill: var(--spa-border, #e6e6e6);
+  fill: var(--spa-muted, #666);
   fill: context-stroke;
 }
 
-:where(.wa-dark) spaday-dagre .spaday-dagre-node rect {
+:where(.wa-dark) spaday-dagre .spaday-dagre-node :is(rect, ellipse, polygon) {
   fill: #242d38;
   stroke: #4a5663;
 }
@@ -71,9 +71,9 @@ spaday-dagre .spaday-dagre-arrow path {
   fill: context-stroke;
 }
 
-:where(.wa-light) spaday-dagre .spaday-dagre-node rect {
+:where(.wa-light) spaday-dagre .spaday-dagre-node :is(rect, ellipse, polygon) {
   fill: var(--spa-surface-2, #fafafa);
-  stroke: var(--spa-border, #e6e6e6);
+  stroke: var(--spa-muted, #666);
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-node text {
@@ -81,7 +81,7 @@ spaday-dagre .spaday-dagre-arrow path {
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-edge-line {
-  stroke: var(--spa-border, #e6e6e6);
+  stroke: var(--spa-muted, #666);
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-edge-label {
@@ -90,7 +90,7 @@ spaday-dagre .spaday-dagre-arrow path {
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-arrow path {
-  fill: var(--spa-border, #e6e6e6);
+  fill: var(--spa-muted, #666);
   fill: context-stroke;
 }
 
@@ -106,8 +106,8 @@ spaday-dagre .spaday-dagre-node {
   cursor: pointer;
 }
 
-spaday-dagre .spaday-dagre-node:hover rect {
-  stroke: var(--spa-muted, #666);
+spaday-dagre .spaday-dagre-node:hover :is(rect, ellipse, polygon) {
+  stroke: var(--spa-accent, #4a90d9);
 }
 
 spaday-dagre .spaday-dagre-edge {
@@ -115,11 +115,14 @@ spaday-dagre .spaday-dagre-edge {
 }
 
 spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
-  stroke: var(--spa-muted, #666);
+  stroke: var(--spa-accent, #4a90d9);
   stroke-width: 2;
 }
 
-:where(.wa-dark) spaday-dagre .spaday-dagre-node:hover rect {
+:where(.wa-dark)
+  spaday-dagre
+  .spaday-dagre-node:hover
+  :is(rect, ellipse, polygon) {
   stroke: #8fb4dd;
 }
 
@@ -127,27 +130,38 @@ spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
   stroke: #8fb4dd;
 }
 
-:where(.wa-light) spaday-dagre .spaday-dagre-node:hover rect {
-  stroke: var(--spa-muted, #666);
+:where(.wa-light)
+  spaday-dagre
+  .spaday-dagre-node:hover
+  :is(rect, ellipse, polygon) {
+  stroke: var(--spa-accent, #4a90d9);
 }
 
 :where(.wa-light)
   spaday-dagre
   .spaday-dagre-edge:hover
   .spaday-dagre-edge-line {
-  stroke: var(--spa-muted, #666);
+  stroke: var(--spa-accent, #4a90d9);
 }
 
 /* endpoints of a hovered or clicked edge light up with the edge */
-spaday-dagre .spaday-dagre-node.spaday-dagre-connected rect {
-  stroke: var(--spa-muted, #666);
+spaday-dagre
+  .spaday-dagre-node.spaday-dagre-connected
+  :is(rect, ellipse, polygon) {
+  stroke: var(--spa-accent, #4a90d9);
   stroke-width: 1.5;
 }
 
-:where(.wa-dark) spaday-dagre .spaday-dagre-node.spaday-dagre-connected rect {
+:where(.wa-dark)
+  spaday-dagre
+  .spaday-dagre-node.spaday-dagre-connected
+  :is(rect, ellipse, polygon) {
   stroke: #8fb4dd;
 }
 
-:where(.wa-light) spaday-dagre .spaday-dagre-node.spaday-dagre-connected rect {
-  stroke: var(--spa-muted, #666);
+:where(.wa-light)
+  spaday-dagre
+  .spaday-dagre-node.spaday-dagre-connected
+  :is(rect, ellipse, polygon) {
+  stroke: var(--spa-accent, #4a90d9);
 }

@@ -6,6 +6,7 @@ export interface DagreNode {
   width?: number;
   height?: number;
   class?: string;
+  shape?: "rect" | "diamond" | "ellipse";
 }
 
 export interface DagreEdge {
@@ -338,15 +339,28 @@ class SpadayDagre extends HTMLElement {
   }
 
   #nodeShape(group: SVGGElement, laid: NodeLaid): void {
-    const rect = group.querySelector("rect");
+    const shape = group.querySelector("rect, ellipse, polygon");
     const text = group.querySelector("text");
-    if (!rect || !text) return;
-    rect.setAttribute("x", String(laid.x - laid.width / 2));
-    rect.setAttribute("y", String(laid.y - laid.height / 2));
-    rect.setAttribute("width", String(laid.width));
-    rect.setAttribute("height", String(laid.height));
-    text.setAttribute("x", String(laid.x));
-    text.setAttribute("y", String(laid.y));
+    if (!shape || !text) return;
+    const { x, y, width: w, height: h } = laid;
+    if (shape.tagName === "rect") {
+      shape.setAttribute("x", String(x - w / 2));
+      shape.setAttribute("y", String(y - h / 2));
+      shape.setAttribute("width", String(w));
+      shape.setAttribute("height", String(h));
+    } else if (shape.tagName === "ellipse") {
+      shape.setAttribute("cx", String(x));
+      shape.setAttribute("cy", String(y));
+      shape.setAttribute("rx", String(w / 2));
+      shape.setAttribute("ry", String(h / 2));
+    } else {
+      shape.setAttribute(
+        "points",
+        `${x},${y - h / 2} ${x + w / 2},${y} ${x},${y + h / 2} ${x - w / 2},${y}`,
+      );
+    }
+    text.setAttribute("x", String(x));
+    text.setAttribute("y", String(y));
   }
 
   #edgeShape(group: SVGGElement, laid: EdgeLaid): void {
@@ -370,10 +384,14 @@ class SpadayDagre extends HTMLElement {
     g.setDefaultEdgeLabel(() => ({}));
     for (const node of nodes) {
       const label = node.label ?? node.id;
+      // Diamonds inflate by sqrt(2) per axis (as in dagre-d3) so the label box
+      // still fits inside the rotated square.
+      const inflate = node.shape === "diamond" ? Math.SQRT2 : 1;
       g.setNode(node.id, {
         width:
-          node.width ?? Math.max(MIN_W, measure(label, NODE_FONT) + PAD_X * 2),
-        height: node.height ?? MIN_H + PAD_Y,
+          (node.width ??
+            Math.max(MIN_W, measure(label, NODE_FONT) + PAD_X * 2)) * inflate,
+        height: (node.height ?? MIN_H + PAD_Y) * inflate,
       });
     }
     const edgeKey = (edge: DagreEdge) => `${edge.source} ${edge.target}`;
@@ -499,11 +517,17 @@ class SpadayDagre extends HTMLElement {
         height: laid.height,
       };
       nextNodeLaid.set(node.id, target);
+      const tag =
+        node.shape === "diamond"
+          ? "polygon"
+          : node.shape === "ellipse"
+            ? "ellipse"
+            : "rect";
       let group = this.#nodeEls.get(node.id);
       if (!group) {
         group = el("g", { "data-node-id": node.id });
         group.append(
-          el("rect", { rx: "6" }),
+          el(tag, tag === "rect" ? { rx: "6" } : {}),
           el("text", {
             "text-anchor": "middle",
             "dominant-baseline": "middle",
@@ -512,6 +536,11 @@ class SpadayDagre extends HTMLElement {
         viewport.append(group);
         this.#nodeEls.set(node.id, group);
         this.#nodeShape(group, target);
+      } else {
+        const shape = group.querySelector("rect, ellipse, polygon");
+        if (shape && shape.tagName !== tag) {
+          shape.replaceWith(el(tag, tag === "rect" ? { rx: "6" } : {}));
+        }
       }
       group.setAttribute(
         "class",
