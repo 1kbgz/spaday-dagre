@@ -4,7 +4,7 @@ from spaday import ComponentPackage
 
 from .components import SpadayDagre
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 package = ComponentPackage(
     name="dagre",

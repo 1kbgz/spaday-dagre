@@ -13,7 +13,7 @@ authors = [
 description = "dagre graph rendering for spaday"
 readme = "README.md"
 license = { text = "Apache-2.0" }
-version = "0.1.0"
+version = "0.1.1"
 requires-python = ">=3.11"
 keywords = []
 
@@ -68,7 +68,7 @@ Repository = "https://github.com/1kbgz/spaday-dagre"
 Homepage = "https://github.com/1kbgz/spaday-dagre"
 
 [tool.bumpversion]
-current_version = "0.1.0"
+current_version = "0.1.1"
 commit = true
 tag = true
 commit_args = "-s"
