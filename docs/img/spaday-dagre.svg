@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" shape-rendering="geometricPrecision" role="img" aria-label="spaday-dagre">
+  <title>spaday-dagre</title>
+  <defs>
+    <clipPath id="viewport-clip">
+      <rect x="124" y="243" width="1006" height="854" rx="62"/>
+    </clipPath>
+  </defs>
+
+  <rect x="88" y="96" width="1078" height="1036" rx="108" fill="#0C4253"/>
+  <rect x="124" y="243" width="1006" height="854" rx="62" fill="#F2F3EF"/>
+  <circle cx="208" cy="175" r="25" fill="#FC6B47"/>
+  <circle cx="295" cy="175" r="25" fill="#AECEC3"/>
+  <circle cx="383" cy="175" r="25" fill="#F2F3EF"/>
+
+  <g clip-path="url(#viewport-clip)">
+    <g transform="translate(627 685) scale(1.12) translate(-627 -685)">
+    <g fill="none" stroke="#0C4253" stroke-width="20">
+      <path d="M545 455 C450 510 410 525 370 572"/>
+      <path d="M627 455 C627 500 627 520 627 568"/>
+      <path d="M709 455 C804 510 844 525 884 572"/>
+      <path d="M370 710 C420 790 435 800 458 872"/>
+      <path d="M590 710 C555 790 545 800 530 872"/>
+      <path d="M664 710 C699 790 710 800 722 872"/>
+      <path d="M884 710 C834 790 822 800 800 872"/>
+    </g>
+    <g fill="#0C4253">
+      <path d="M351.9 593.3 L374.8 507.8 L432.6 557.0 Z"/>
+      <path d="M627.0 596.0 L589.0 516.0 L665.0 516.0 Z"/>
+      <path d="M902.1 593.3 L821.4 557.0 L879.2 507.8 Z"/>
+      <path d="M466.5 898.7 L406.0 834.0 L478.4 810.9 Z"/>
+      <path d="M524.3 899.4 L503.4 813.3 L577.8 828.8 Z"/>
+      <path d="M726.6 899.6 L676.0 827.0 L750.9 814.5 Z"/>
+      <path d="M791.8 898.8 L778.9 811.2 L851.5 833.4 Z"/>
+    </g>
+
+    <g stroke="#0C4253" stroke-width="14">
+      <rect x="517" y="335" width="220" height="120" rx="28" fill="#AECEC3"/>
+      <rect x="230" y="590" width="220" height="120" rx="28" fill="#AECEC3"/>
+      <rect x="517" y="590" width="220" height="120" rx="28" fill="#FC6B47"/>
+      <rect x="804" y="590" width="220" height="120" rx="28" fill="#AECEC3"/>
+      <rect x="380" y="900" width="220" height="120" rx="28" fill="#AECEC3"/>
+      <rect x="656" y="900" width="220" height="120" rx="28" fill="#AECEC3"/>
+    </g>
+
+    <g fill="#FC6B47">
+      <circle cx="340" cy="590" r="23"/>
+      <circle cx="914" cy="590" r="23"/>
+      <circle cx="766" cy="1020" r="23"/>
+    </g>
+  </g>
+  </g>
+</svg>
