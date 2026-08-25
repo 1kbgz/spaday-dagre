@@ -108,8 +108,12 @@ test("follows the wa-dark page mode on shell tokens", async ({ page }) => {
     document.documentElement.classList.add("wa-dark");
     const dark = fill();
     document.documentElement.classList.remove("wa-dark");
-    return { light, dark, back: fill() };
+    const arrow = getComputedStyle(
+      graph.querySelector(".spaday-dagre-arrow path"),
+    ).fill;
+    return { light, dark, back: fill(), arrow };
   });
+  expect(r.arrow).toBe("context-stroke"); // arrowheads follow their edge's (hover) stroke
   expect(r.light).toBe("rgb(250, 250, 250)"); // --spa-surface-2 light default
   expect(r.dark).toBe("rgb(36, 45, 56)"); // #242d38, tuned for contrast on dark pages
   expect(r.back).toBe("rgb(250, 250, 250)");
@@ -123,6 +127,11 @@ test("runs the Python example: click selects, dark mode re-themes", async ({
   await expect(node).toBeVisible();
   await node.click();
   await expect(page.locator(".status strong")).toHaveText("train");
+  // a labeled edge lands its label in the store via event_value("label")
+  await page
+    .locator('spaday-dagre [data-edge-label="rows"] .spaday-dagre-edge-label')
+    .click();
+  await expect(page.locator(".status strong")).toHaveText("rows");
   await page.getByRole("button", { name: "Left-right" }).click();
   await expect
     .poll(async () => {

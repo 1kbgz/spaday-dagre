@@ -33,6 +33,7 @@ graph = (
     .prop("graph", GRAPH)
     .compute("layout", obj({"rankdir": field("rankdir")}))
     .on("dagre-node-click", SetField("selected", event_value()))
+    .on("dagre-edge-click", SetField("selected", event_value("label")))
 )
 
 controls = element("p").child(

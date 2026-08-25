@@ -45,6 +45,7 @@ spaday-dagre .spaday-dagre-edge-label {
 
 spaday-dagre .spaday-dagre-arrow path {
   fill: var(--spa-border, #e6e6e6);
+  fill: context-stroke;
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-node rect {
@@ -67,6 +68,7 @@ spaday-dagre .spaday-dagre-arrow path {
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-arrow path {
   fill: #5a6672;
+  fill: context-stroke;
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-node rect {
@@ -89,6 +91,7 @@ spaday-dagre .spaday-dagre-arrow path {
 
 :where(.wa-light) spaday-dagre .spaday-dagre-arrow path {
   fill: var(--spa-border, #e6e6e6);
+  fill: context-stroke;
 }
 
 spaday-dagre .spaday-dagre-edge-hit {
