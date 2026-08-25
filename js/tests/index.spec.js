@@ -249,3 +249,42 @@ test("re-layout animates while preserving element identity", async ({
     )
     .toEqual({ identity: "kept", moved: true }); // same element, tweened to its new spot
 });
+
+test("renders diamond and ellipse node shapes", async ({ page }) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.graph = {
+      nodes: [
+        { id: "chan", shape: "diamond" },
+        { id: "mod" },
+        { id: "sink", shape: "ellipse" },
+      ],
+      edges: [
+        { source: "mod", target: "chan" },
+        { source: "chan", target: "sink" },
+      ],
+    };
+    document.body.appendChild(graph);
+    const tag = (id) =>
+      graph
+        .querySelector(`[data-node-id="${id}"]`)
+        .querySelector("rect, ellipse, polygon").tagName;
+    const poly = graph
+      .querySelector('[data-node-id="chan"]')
+      .querySelector("polygon");
+    // then flip the diamond back to a rect to exercise shape replacement
+    graph.graph = {
+      nodes: [{ id: "chan" }, { id: "mod" }, { id: "sink", shape: "ellipse" }],
+      edges: [{ source: "mod", target: "chan" }],
+    };
+    return {
+      shapes: { chan: poly.tagName, mod: tag("mod"), sink: tag("sink") },
+      diamondPoints: poly.getAttribute("points").split(" ").length,
+      reshaped: tag("chan"),
+    };
+  });
+  expect(r.shapes).toEqual({ chan: "polygon", mod: "rect", sink: "ellipse" });
+  expect(r.diamondPoints).toBe(4);
+  expect(r.reshaped).toBe("rect");
+});

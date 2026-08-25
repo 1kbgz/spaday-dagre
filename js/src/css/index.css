@@ -12,7 +12,7 @@ spaday-dagre svg {
   height: auto;
 }
 
-spaday-dagre .spaday-dagre-node rect {
+spaday-dagre .spaday-dagre-node :is(rect, ellipse, polygon) {
   fill: var(--spa-surface-2, #fafafa);
   stroke: var(--spa-border, #e6e6e6);
   stroke-width: 1;
@@ -48,7 +48,7 @@ spaday-dagre .spaday-dagre-arrow path {
   fill: context-stroke;
 }
 
-:where(.wa-dark) spaday-dagre .spaday-dagre-node rect {
+:where(.wa-dark) spaday-dagre .spaday-dagre-node :is(rect, ellipse, polygon) {
   fill: #242d38;
   stroke: #4a5663;
 }
@@ -71,7 +71,7 @@ spaday-dagre .spaday-dagre-arrow path {
   fill: context-stroke;
 }
 
-:where(.wa-light) spaday-dagre .spaday-dagre-node rect {
+:where(.wa-light) spaday-dagre .spaday-dagre-node :is(rect, ellipse, polygon) {
   fill: var(--spa-surface-2, #fafafa);
   stroke: var(--spa-border, #e6e6e6);
 }
@@ -106,7 +106,7 @@ spaday-dagre .spaday-dagre-node {
   cursor: pointer;
 }
 
-spaday-dagre .spaday-dagre-node:hover rect {
+spaday-dagre .spaday-dagre-node:hover :is(rect, ellipse, polygon) {
   stroke: var(--spa-muted, #666);
 }
 
@@ -119,7 +119,10 @@ spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
   stroke-width: 2;
 }
 
-:where(.wa-dark) spaday-dagre .spaday-dagre-node:hover rect {
+:where(.wa-dark)
+  spaday-dagre
+  .spaday-dagre-node:hover
+  :is(rect, ellipse, polygon) {
   stroke: #8fb4dd;
 }
 
@@ -127,7 +130,10 @@ spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
   stroke: #8fb4dd;
 }
 
-:where(.wa-light) spaday-dagre .spaday-dagre-node:hover rect {
+:where(.wa-light)
+  spaday-dagre
+  .spaday-dagre-node:hover
+  :is(rect, ellipse, polygon) {
   stroke: var(--spa-muted, #666);
 }
 
@@ -139,15 +145,23 @@ spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
 }
 
 /* endpoints of a hovered or clicked edge light up with the edge */
-spaday-dagre .spaday-dagre-node.spaday-dagre-connected rect {
+spaday-dagre
+  .spaday-dagre-node.spaday-dagre-connected
+  :is(rect, ellipse, polygon) {
   stroke: var(--spa-muted, #666);
   stroke-width: 1.5;
 }
 
-:where(.wa-dark) spaday-dagre .spaday-dagre-node.spaday-dagre-connected rect {
+:where(.wa-dark)
+  spaday-dagre
+  .spaday-dagre-node.spaday-dagre-connected
+  :is(rect, ellipse, polygon) {
   stroke: #8fb4dd;
 }
 
-:where(.wa-light) spaday-dagre .spaday-dagre-node.spaday-dagre-connected rect {
+:where(.wa-light)
+  spaday-dagre
+  .spaday-dagre-node.spaday-dagre-connected
+  :is(rect, ellipse, polygon) {
   stroke: var(--spa-muted, #666);
 }
