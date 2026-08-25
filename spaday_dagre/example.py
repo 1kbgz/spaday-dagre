@@ -1,5 +1,6 @@
 """A pipeline-explorer showcase, live over a transports wire: the server sweeps an
-*active* highlight from ingest through deploy and pushes it to every client, and
+*active* highlight from ingest through deploy — walking the nodes and the edges
+between them — pushing each step to every client, and
 node/edge selection rides back to the server as model edits (the same round trip
 the other peers' examples exercise). Also on show: node shapes, a right-click
 context menu for nodes and edges, view controls, host-driven sizing, and the
@@ -20,6 +21,13 @@ from starlette.routing import WebSocketRoute
 from spaday_dagre import Dagre, package
 
 ORDER = ["ingest", "clean", "features", "train", "evaluate", "deploy"]
+
+# the sweep walks the pipeline node by node, stepping across the edge between each pair
+STEPS: list[str] = []
+for _i, _node in enumerate(ORDER):
+    STEPS.append(_node)
+    if _i < len(ORDER) - 1:
+        STEPS.append(f"{_node}\u2192{ORDER[_i + 1]}")
 
 GRAPH = {
     "nodes": [
@@ -55,12 +63,13 @@ server = transports.Server(session)
 
 
 async def sweep() -> None:
-    """Walk the active highlight from ingest through deploy, forever (server → clients)."""
+    """Walk the active highlight from ingest through deploy — nodes and the edges between
+    them — forever (server → clients)."""
     stage = 0
     while True:
-        await asyncio.sleep(1.2)
-        stage = (stage + 1) % len(ORDER)
-        pipeline.active = ORDER[stage]
+        await asyncio.sleep(0.9)
+        stage = (stage + 1) % len(STEPS)
+        pipeline.active = STEPS[stage]
 
 
 # what a context-menu action selects: the node id, else the edge label, else "source → target"
@@ -155,12 +164,29 @@ page = (
     )
 ).bind_root_class("wa-dark", "dark")
 
+
+def _active_rule(step: str) -> str:
+    if "\u2192" in step:
+        source, target = step.split("\u2192")
+        edge = f'[data-edge-source="{source}"][data-edge-target="{target}"]'
+        return (
+            f'  spaday-dagre[data-active="{step}"] {edge} .spaday-dagre-edge-line '
+            "{ stroke: var(--spa-accent); stroke-width: 2.5; }\n"
+            f'  spaday-dagre[data-active="{step}"] {edge} .spaday-dagre-edge-label '
+            "{ fill: var(--spa-accent); }"
+        )
+    return (
+        f'  spaday-dagre[data-active="{step}"] [data-node-id="{step}"] :is(rect, polygon, ellipse) {{ stroke: var(--spa-accent); stroke-width: 2; }}'
+    )
+
+
 _HIGHLIGHTS = "\n".join(
-    f'  spaday-dagre[data-active="{node}"] [data-node-id="{node}"] :is(rect, polygon, ellipse) '
-    "{ stroke: var(--spa-accent); stroke-width: 2; }\n"
-    f'  spaday-dagre[data-selected="{node}"] [data-node-id="{node}"] :is(rect, polygon, ellipse) '
-    "{ fill: var(--spa-select-fill); stroke: var(--spa-accent); stroke-width: 2.5; }"
-    for node in ORDER
+    [_active_rule(step) for step in STEPS]
+    + [
+        f'  spaday-dagre[data-selected="{node}"] [data-node-id="{node}"] :is(rect, polygon, ellipse) '
+        "{ fill: var(--spa-select-fill); stroke: var(--spa-accent); stroke-width: 2.5; }"
+        for node in ORDER
+    ]
 )
 
 STYLES = f"""
