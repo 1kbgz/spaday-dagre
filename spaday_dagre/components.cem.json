@@ -24,6 +24,20 @@
                 "text": "unknown"
               },
               "description": "dagre layout options: rankdir (TB/BT/LR/RL), align, nodesep, edgesep, ranksep, marginx, marginy, ranker."
+            },
+            {
+              "name": "zoomable",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Wheel zoom (cursor-anchored), drag pan, and double-click reset; on by default."
+            },
+            {
+              "name": "transition",
+              "type": {
+                "text": "number"
+              },
+              "description": "Re-layout transition duration in milliseconds (default 250); 0 disables, and reduced-motion preferences disable it automatically."
             }
           ],
           "events": [

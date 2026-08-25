@@ -26,7 +26,7 @@ spaday-dagre .spaday-dagre-node text {
   pointer-events: none; /* labels must not intercept node clicks */
 }
 
-spaday-dagre .spaday-dagre-edge path {
+spaday-dagre .spaday-dagre-edge-line {
   fill: none;
   stroke: var(--spa-border, #e6e6e6);
   stroke-width: 1.5;
@@ -56,7 +56,7 @@ spaday-dagre .spaday-dagre-arrow path {
   fill: var(--spa-muted, #9aa3ad);
 }
 
-:where(.wa-dark) spaday-dagre .spaday-dagre-edge path {
+:where(.wa-dark) spaday-dagre .spaday-dagre-edge-line {
   stroke: var(--spa-border, #333b45);
 }
 
@@ -78,7 +78,7 @@ spaday-dagre .spaday-dagre-arrow path {
   fill: var(--spa-muted, #666);
 }
 
-:where(.wa-light) spaday-dagre .spaday-dagre-edge path {
+:where(.wa-light) spaday-dagre .spaday-dagre-edge-line {
   stroke: var(--spa-border, #e6e6e6);
 }
 
@@ -89,4 +89,48 @@ spaday-dagre .spaday-dagre-arrow path {
 
 :where(.wa-light) spaday-dagre .spaday-dagre-arrow path {
   fill: var(--spa-border, #e6e6e6);
+}
+
+spaday-dagre .spaday-dagre-edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 10;
+  pointer-events: stroke;
+}
+
+/* hover affordances (what dagre-d3 gave for free via d3 selections) */
+spaday-dagre .spaday-dagre-node {
+  cursor: pointer;
+}
+
+spaday-dagre .spaday-dagre-node:hover rect {
+  stroke: var(--spa-muted, #666);
+}
+
+spaday-dagre .spaday-dagre-edge {
+  cursor: pointer;
+}
+
+spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
+  stroke: var(--spa-muted, #666);
+  stroke-width: 2;
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-node:hover rect {
+  stroke: var(--spa-muted, #9aa3ad);
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
+  stroke: var(--spa-muted, #9aa3ad);
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-node:hover rect {
+  stroke: var(--spa-muted, #666);
+}
+
+:where(.wa-light)
+  spaday-dagre
+  .spaday-dagre-edge:hover
+  .spaday-dagre-edge-line {
+  stroke: var(--spa-muted, #666);
 }

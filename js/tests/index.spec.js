@@ -13,6 +13,7 @@ test("lays out and renders nodes, edges, labels, and re-layouts on direction cha
         { source: "a", target: "c" },
       ],
     };
+    graph.transition = 0; // positions are asserted synchronously below
     document.body.appendChild(graph);
     const pos = (id) => {
       const rect = graph.querySelector(`[data-node-id="${id}"] rect`);
@@ -26,7 +27,7 @@ test("lays out and renders nodes, edges, labels, and re-layouts on direction cha
     const lr = { a: pos("a"), b: pos("b") };
     return {
       nodes: graph.querySelectorAll("[data-node-id]").length,
-      edges: graph.querySelectorAll("[data-edge-source] path").length,
+      edges: graph.querySelectorAll(".spaday-dagre-edge-line").length,
       labels: [...graph.querySelectorAll("text")].map((t) => t.textContent),
       tbVertical: tb.b.y > tb.a.y, // TB: rank grows downward
       lrHorizontal:
@@ -113,4 +114,100 @@ test("runs the Python example: click selects, dark mode re-themes", async ({
         .evaluate((el) => getComputedStyle(el).fill),
     )
     .toBe("rgb(29, 35, 43)"); // bind_root_class("wa-dark") re-themes the graph
+});
+
+test("zooms at the cursor, pans by drag, resets on double-click", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.transition = 0;
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+    };
+    document.body.appendChild(graph);
+    const svg = graph.querySelector("svg");
+    const clicks = [];
+    graph.addEventListener("dagre-node-click", (e) => clicks.push(e.detail));
+    const rect = svg.getBoundingClientRect();
+    svg.dispatchEvent(
+      new WheelEvent("wheel", {
+        deltaY: -240,
+        clientX: rect.left + 30,
+        clientY: rect.top + 30,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    const zoomed = graph.view;
+    const down = new PointerEvent("pointerdown", {
+      pointerId: 1,
+      button: 0,
+      clientX: rect.left + 40,
+      clientY: rect.top + 40,
+      bubbles: true,
+    });
+    svg.dispatchEvent(down);
+    svg.dispatchEvent(
+      new PointerEvent("pointermove", {
+        pointerId: 1,
+        clientX: rect.left + 90,
+        clientY: rect.top + 70,
+        bubbles: true,
+      }),
+    );
+    svg.dispatchEvent(
+      new PointerEvent("pointerup", { pointerId: 1, bubbles: true }),
+    );
+    const panned = graph.view;
+    // the drag's trailing click must not select a node
+    graph
+      .querySelector('[data-node-id="a"] rect')
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    svg.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    return { zoomed, panned, reset: graph.view, clicks };
+  });
+  expect(r.zoomed.k).toBeGreaterThan(1); // wheel-up zooms in
+  expect(r.panned.x).not.toBe(r.zoomed.x); // drag panned the viewport
+  expect(r.clicks).toEqual([]); // pan suppressed the click
+  expect(r.reset).toEqual({ x: 0, y: 0, k: 1 }); // double-click resets
+});
+
+test("re-layout animates while preserving element identity", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.id = "animated";
+    graph.transition = 80;
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      edges: [
+        { source: "a", target: "b" },
+        { source: "a", target: "c" },
+      ],
+    };
+    document.body.appendChild(graph);
+    // node "c" moves in both axes on the TB->LR flip ("b" coincidentally does not)
+    const el = graph.querySelector('[data-node-id="c"]');
+    el.dataset.identity = "kept"; // marker survives only if the element is reused
+    window.__before = Number(el.querySelector("rect").getAttribute("x"));
+    graph.layout = { rankdir: "LR" };
+  });
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const el = document.querySelector('#animated [data-node-id="c"]');
+        return {
+          identity: el.dataset.identity,
+          moved:
+            Number(el.querySelector("rect").getAttribute("x")) !==
+            window.__before,
+        };
+      }),
+    )
+    .toEqual({ identity: "kept", moved: true }); // same element, tweened to its new spot
 });

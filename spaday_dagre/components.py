@@ -32,6 +32,20 @@ class SpadayDagre(Component):
                 default=None,
                 description="dagre layout options: rankdir (TB/BT/LR/RL), align, nodesep, edgesep, ranksep, marginx, marginy, ranker.",
             ),
+            PropertySchema(
+                name="zoomable",
+                kind="boolean",
+                choices=(),
+                default=None,
+                description="Wheel zoom (cursor-anchored), drag pan, and double-click reset; on by default.",
+            ),
+            PropertySchema(
+                name="transition",
+                kind="number",
+                choices=(),
+                default=None,
+                description="Re-layout transition duration in milliseconds (default 250); 0 disables, and reduced-motion preferences disable it automatically.",
+            ),
         ),
         events=("dagre-node-click", "dagre-edge-click"),
         slots=(),
@@ -43,6 +57,8 @@ class SpadayDagre(Component):
         key: str | None = None,
         graph: Any = None,
         layout: Any = None,
+        zoomable: bool | None = None,
+        transition: float | None = None,
         **props: Any,
     ) -> None:
         super().__init__(
@@ -51,6 +67,8 @@ class SpadayDagre(Component):
             props={
                 "graph": graph,
                 "layout": layout,
+                "zoomable": zoomable,
+                "transition": transition,
             },
             **props,
         )
