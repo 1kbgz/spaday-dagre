@@ -246,15 +246,19 @@
         <article role="main" id="furo-main-content">
           <div class="toctree-wrapper compound">
 </div>
-<section class="tex2jax_ignore mathjax_ignore" id="spaday-dagre">
-<h1>spaday-dagre<a class="headerlink" href="#spaday-dagre" title="Link to this heading">¶</a></h1>
+<a href="https://github.com/1kbgz/spaday-dagre">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/1kbgz/spaday-dagre/raw/main/docs/img/logo-dark.png?raw=true">
+    <img alt="spaday-dagre logo, a layered directed graph inside a browser window" src="https://github.com/1kbgz/spaday-dagre/raw/main/docs/img/logo-light.png?raw=true" width="800">
+  </picture>
+</a>
 <p>dagre graph rendering for spaday</p>
 <p><a class="reference external" href="https://github.com/1kbgz/spaday-dagre/actions/workflows/build.yaml"><img alt="Build Status" src="https://github.com/1kbgz/spaday-dagre/actions/workflows/build.yaml/badge.svg?branch=main&amp;event=push" /></a>
 <a class="reference external" href="https://codecov.io/gh/1kbgz/spaday-dagre"><img alt="codecov" src="https://codecov.io/gh/1kbgz/spaday-dagre/branch/main/graph/badge.svg" /></a>
 <a class="reference external" href="https://github.com/1kbgz/spaday-dagre"><img alt="License" src="https://img.shields.io/github/license/1kbgz/spaday-dagre" /></a>
 <a class="reference external" href="https://pypi.python.org/pypi/spaday-dagre"><img alt="PyPI" src="https://img.shields.io/pypi/v/spaday-dagre.svg" /></a></p>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">spaday-dagre</span></code> renders directed graphs in <a class="reference external" href="https://1kbgz.github.io/spaday/">spaday</a> from a
 serializable node/edge config, laid out by <a class="reference external" href="https://github.com/dagrejs/dagre">&#64;dagrejs/dagre</a> and
 drawn as light-DOM SVG. Colors ride the spaday shell’s <code class="docutils literal notranslate"><span class="pre">--spa-*</span></code> tokens, so
@@ -263,7 +267,7 @@ reaches every shape. <code class="docutils literal notranslate"><span class="pre
 <code class="docutils literal notranslate"><span class="pre">SetField(&quot;selected&quot;,</span> <span class="pre">event_value())</span></code> just works); <code class="docutils literal notranslate"><span class="pre">dagre-edge-click</span></code> bubbles <code class="docutils literal notranslate"><span class="pre">{source,</span> <span class="pre">target}</span></code>.</p>
 </section>
 <section id="quick-example">
-<h2>Quick example<a class="headerlink" href="#quick-example" title="Link to this heading">¶</a></h2>
+<h1>Quick example<a class="headerlink" href="#quick-example" title="Link to this heading">¶</a></h1>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">spaday</span><span class="w"> </span><span class="kn">import</span> <span class="n">element</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">spaday.backends.starlette</span><span class="w"> </span><span class="kn">import</span> <span class="n">serve</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">spaday_dagre</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dagre</span><span class="p">,</span> <span class="n">package</span>
@@ -284,7 +288,7 @@ reaches every shape. <code class="docutils literal notranslate"><span class="pre
 entry point, so <code class="docutils literal notranslate"><span class="pre">packages=[&quot;dagre&quot;]</span></code> also works.</p>
 </section>
 <section id="run-the-local-example">
-<h2>Run the local example<a class="headerlink" href="#run-the-local-example" title="Link to this heading">¶</a></h2>
+<h1>Run the local example<a class="headerlink" href="#run-the-local-example" title="Link to this heading">¶</a></h1>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>spaday_dagre.example
 </pre></div>
 </div>
@@ -294,7 +298,6 @@ dark-mode toggle.</p>
 <p class="admonition-title">Note</p>
 <p>This library was generated using <a class="reference external" href="https://copier.readthedocs.io/en/stable/">copier</a> from the <a class="reference external" href="https://github.com/python-project-templates/base">Base Python Project Template repository</a>.</p>
 </div>
-</section>
 </section>
 
         </article>
