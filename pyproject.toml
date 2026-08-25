@@ -38,8 +38,11 @@ dagre = "spaday_dagre:package"
 
 [project.optional-dependencies]
 examples = [
+    "pydantic>=2",
     "starlette",
+    "transports",
     "uvicorn",
+    "websockets",
 ]
 develop = [
     "build",

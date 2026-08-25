@@ -356,7 +356,7 @@ test("the example's node context menu opens at the pointer with graph context", 
   await expect(node).toBeVisible();
   await node.click({ button: "right" });
 
-  const menu = page.locator("#node-menu");
+  const menu = page.locator("#graph-menu");
   await expect(menu).toBeVisible();
   await expect(menu.locator("strong")).toHaveText("evaluate"); // captured context drives the items
   const nodeBox = await node.boundingBox();
@@ -372,6 +372,44 @@ test("the example's node context menu opens at the pointer with graph context", 
   await expect(menu).toBeVisible();
   await page.locator("h1").click();
   await expect(menu).toBeHidden();
+
+  // edges get the same menu, labeled by the edge context
+  await page.evaluate(() => {
+    const hit = document.querySelector(
+      'spaday-dagre [data-edge-label="rows"] .spaday-dagre-edge-hit',
+    );
+    const box = hit.getBoundingClientRect();
+    hit.dispatchEvent(
+      new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        clientX: box.x + box.width / 2,
+        clientY: box.y + box.height / 2,
+      }),
+    );
+  });
+  await expect(menu).toBeVisible();
+  await expect(menu.locator("strong")).toHaveText("rows"); // labeled edges show their label
+  await menu.getByRole("button", { name: "Select", exact: true }).click();
+  await expect(page.locator(".status strong")).toHaveText("rows"); // the edge's label round-trips
+  await expect(menu).toBeHidden();
+});
+
+test("the example is live over the wire: pushed highlights and echoed selection", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:8016");
+  const graph = page.locator("spaday-dagre");
+  // the server sweeps the active stage through the pipeline (server -> client push)
+  await expect(graph).toHaveAttribute("data-active", /./);
+  const first = await graph.getAttribute("data-active");
+  await expect
+    .poll(() => graph.getAttribute("data-active"), { timeout: 5000 })
+    .not.toBe(first);
+  // a node click rides to the server and the echoed model drives the selection attribute
+  await page.locator('spaday-dagre [data-node-id="clean"] rect').click();
+  await expect(graph).toHaveAttribute("data-selected", "clean");
+  await expect(page.locator(".status strong")).toHaveText("clean");
 });
 
 test("panning is clamped so the graph cannot be dragged out of view", async ({
@@ -531,4 +569,85 @@ test("the frame tracks the host's size, including dynamic resize", async ({
   // the observer kept the control pad inside the shrunken frame
   expect(r.pad.right).toBeLessThanOrEqual(r.resized.frame.right + 1);
   expect(r.pad.bottom).toBeLessThanOrEqual(r.resized.frame.bottom + 1);
+});
+
+test("switching layout direction re-fits and re-centers the view", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.style.cssText = "width:700px;height:500px";
+    graph.transition = 0;
+    graph.controls = true;
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      edges: [
+        { source: "a", target: "b" },
+        { source: "a", target: "c" },
+      ],
+    };
+    document.body.appendChild(graph);
+    const pad = graph.querySelector(".spaday-dagre-controls");
+    pad.querySelector('[title="Pan right"]').click(); // wander off-center
+    pad.querySelector('[title="Pan down"]').click();
+    graph.layout = { rankdir: "LR" };
+    const after = { ...graph.view };
+    graph.querySelector("svg").dispatchEvent(new MouseEvent("dblclick"));
+    return { after, reset: { ...graph.view } };
+  });
+  expect(r.after).toEqual(r.reset); // the switch landed exactly on the fit-and-centered view
+});
+
+test("edges meet diamond and ellipse boundaries instead of the layout bbox", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.graph = {
+      nodes: [
+        { id: "a" },
+        { id: "b", shape: "diamond" },
+        { id: "c", shape: "ellipse" },
+      ],
+      edges: [
+        { source: "a", target: "b" },
+        { source: "b", target: "c" },
+      ],
+    };
+    document.body.appendChild(graph);
+    const shape = (id, tag) => {
+      const el = graph.querySelector(`[data-node-id="${id}"] ${tag}`);
+      const box = el.getBBox();
+      return {
+        cx: box.x + box.width / 2,
+        cy: box.y + box.height / 2,
+        hw: box.width / 2,
+        hh: box.height / 2,
+      };
+    };
+    const endOf = (source, target) => {
+      const d = graph
+        .querySelector(
+          `[data-edge-source="${source}"][data-edge-target="${target}"] .spaday-dagre-edge-line`,
+        )
+        .getAttribute("d");
+      const nums = d.match(/-?[\d.]+/g).map(Number);
+      return { x: nums[nums.length - 2], y: nums[nums.length - 1] };
+    };
+    const b = shape("b", "polygon");
+    const c = shape("c", "ellipse");
+    const intoB = endOf("a", "b");
+    const intoC = endOf("b", "c");
+    return {
+      // diamond metric: |dx|/hw + |dy|/hh == 1 exactly on the boundary
+      diamond:
+        Math.abs(intoB.x - b.cx) / b.hw + Math.abs(intoB.y - b.cy) / b.hh,
+      // ellipse metric: (dx/hw)^2 + (dy/hh)^2 == 1 exactly on the boundary
+      ellipse: ((intoC.x - c.cx) / c.hw) ** 2 + ((intoC.y - c.cy) / c.hh) ** 2,
+    };
+  });
+  expect(Math.abs(r.diamond - 1)).toBeLessThan(0.05);
+  expect(Math.abs(r.ellipse - 1)).toBeLessThan(0.05);
 });

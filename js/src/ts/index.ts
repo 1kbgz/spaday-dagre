@@ -111,6 +111,25 @@ function el<K extends keyof SVGElementTagNameMap>(
   return node;
 }
 
+// dagre routes edges to the rectangular bbox; nodes drawn as inscribed shapes need the
+// true boundary, so edge endpoints are re-clipped along the ray toward the neighbor point
+function shapeIntersect(
+  center: Point,
+  half: { w: number; h: number },
+  shape: DagreNode["shape"],
+  toward: Point,
+): Point | null {
+  const dx = toward.x - center.x;
+  const dy = toward.y - center.y;
+  if ((!dx && !dy) || !half.w || !half.h) return null;
+  let t = 0;
+  if (shape === "diamond")
+    t = 1 / (Math.abs(dx) / half.w + Math.abs(dy) / half.h);
+  else if (shape === "ellipse") t = 1 / Math.hypot(dx / half.w, dy / half.h);
+  else return null;
+  return { x: center.x + dx * t, y: center.y + dy * t };
+}
+
 function ease(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
@@ -245,6 +264,7 @@ class SpadayDagre extends HTMLElement {
 
   set layout(value: DagreLayoutConfig | null) {
     this.#layout = value ?? {};
+    this.#centered = false; // a new layout re-fits and re-centers the view
     this.#render();
   }
   get layout(): DagreLayoutConfig {
@@ -577,6 +597,7 @@ class SpadayDagre extends HTMLElement {
         height: (node.height ?? MIN_H + PAD_Y) * inflate,
       });
     }
+    const shapeById = new Map(nodes.map((node) => [node.id, node.shape]));
     const edgeKey = (edge: DagreEdge) => `${edge.source} ${edge.target}`;
     for (const edge of edges) {
       const sized = edge.label
@@ -608,8 +629,24 @@ class SpadayDagre extends HTMLElement {
       const laid = g.edge(edge.source, edge.target, key);
       if (!laid) continue;
       seenEdges.add(key);
+      const pts = [...(laid.points ?? [])];
+      const clip = (id: string, end: number, ref: number) => {
+        const shape = shapeById.get(id);
+        if (shape !== "diamond" && shape !== "ellipse") return;
+        const n = g.node(id);
+        if (!n || pts.length < 2) return;
+        const hit = shapeIntersect(
+          { x: n.x, y: n.y },
+          { w: n.width / 2, h: n.height / 2 },
+          shape,
+          pts[ref],
+        );
+        if (hit) pts[end] = hit;
+      };
+      clip(edge.source, 0, 1);
+      clip(edge.target, pts.length - 1, pts.length - 2);
       const target: EdgeLaid = {
-        points: resample(laid.points ?? [], EDGE_SAMPLES),
+        points: resample(pts, EDGE_SAMPLES),
         label:
           edge.label && laid.x !== undefined && laid.y !== undefined
             ? { x: laid.x, y: laid.y }

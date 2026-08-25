@@ -56,8 +56,10 @@ entry point, so `packages=["dagre"]` also works.
 python -m spaday_dagre.example
 ```
 
-Open <http://127.0.0.1:8016>: a pipeline DAG with direction switching, node selection, mixed node
-shapes, a right-click node menu, view controls, and the dark-mode toggle.
+Open <http://127.0.0.1:8016>: a pipeline DAG live over a transports wire — the server sweeps an
+active-stage highlight through the graph while node/edge selection rides back as model edits — with
+direction switching, mixed node shapes, a right-click menu for nodes and edges, view controls, and
+the dark-mode toggle.
 
 > [!NOTE]
 > This library was generated using [copier](https://copier.readthedocs.io/en/stable/) from the [Base Python Project Template repository](https://github.com/python-project-templates/base).
