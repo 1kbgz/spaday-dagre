@@ -37,6 +37,10 @@ dependencies = [
 dagre = "spaday_dagre:package"
 
 [project.optional-dependencies]
+examples = [
+    "starlette",
+    "uvicorn",
+]
 develop = [
     "build",
     "bump-my-version",
@@ -49,8 +53,10 @@ develop = [
     "pytest",
     "pytest-cov",
     "ruff",
+    "starlette",
     "twine",
     "ty",
+    "uvicorn",
     "uv",
     "wheel",
 ]
