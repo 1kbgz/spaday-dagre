@@ -90,7 +90,16 @@ graph = (
     # selection is a server round trip: the edit rides the wire up and takes effect when the
     # server echoes it back into the mirrored model, so every tab agrees
     .on("dagre-node-click", SendPatch("pipeline", "selected", event_value()))
-    .on("dagre-edge-click", SendPatch("pipeline", "selected", event_value("label")))
+    # the selection key matches the menu's: the label, else "source → target" — so every
+    # edge selection has a stable value the highlight CSS can match
+    .on(
+        "dagre-edge-click",
+        SendPatch(
+            "pipeline",
+            "selected",
+            cond(event_value("label"), event_value("label"), concat(event_value("source"), " \u2192 ", event_value("target"))),
+        ),
+    )
     # right-click a node or edge: capture the event detail into `menu` and open the popup at
     # the pointer (event_value paths walk the detail, which carries the context plus {x, y})
     .on(
@@ -166,17 +175,28 @@ page = (
 
 
 def _active_rule(step: str) -> str:
+    """The sweep's walk highlight: a red outline, distinct from the blue selection."""
     if "\u2192" in step:
         source, target = step.split("\u2192")
         edge = f'[data-edge-source="{source}"][data-edge-target="{target}"]'
         return (
             f'  spaday-dagre[data-active="{step}"] {edge} .spaday-dagre-edge-line '
-            "{ stroke: var(--spa-accent); stroke-width: 2.5; }\n"
+            "{ stroke: var(--spa-walk); stroke-width: 2.5; }\n"
             f'  spaday-dagre[data-active="{step}"] {edge} .spaday-dagre-edge-label '
-            "{ fill: var(--spa-accent); }"
+            "{ fill: var(--spa-walk); }"
         )
+    return f'  spaday-dagre[data-active="{step}"] [data-node-id="{step}"] :is(rect, polygon, ellipse) {{ stroke: var(--spa-walk); stroke-width: 2; }}'
+
+
+def _selected_edge_rule(edge: dict) -> str:
+    """A selected edge stays highlighted; its selection key is the label, else "source → target"."""
+    key = edge.get("label") or f"{edge['source']} \u2192 {edge['target']}"
+    hook = f'[data-edge-source="{edge["source"]}"][data-edge-target="{edge["target"]}"]'
     return (
-        f'  spaday-dagre[data-active="{step}"] [data-node-id="{step}"] :is(rect, polygon, ellipse) {{ stroke: var(--spa-accent); stroke-width: 2; }}'
+        f'  spaday-dagre[data-selected="{key}"] {hook} .spaday-dagre-edge-line '
+        "{ stroke: var(--spa-accent); stroke-width: 2.5; }\n"
+        f'  spaday-dagre[data-selected="{key}"] {hook} .spaday-dagre-edge-label '
+        "{ fill: var(--spa-accent); }"
     )
 
 
@@ -187,6 +207,7 @@ _HIGHLIGHTS = "\n".join(
         "{ fill: var(--spa-select-fill); stroke: var(--spa-accent); stroke-width: 2.5; }"
         for node in ORDER
     ]
+    + [_selected_edge_rule(edge) for edge in GRAPH["edges"]]
 )
 
 STYLES = f"""
@@ -194,13 +215,13 @@ STYLES = f"""
   :root {{
     --spa-surface: #ffffff; --spa-surface-2: #f4f6f8; --spa-border: #e3e6ea;
     --spa-muted: #5f6b76; --spa-accent: #4a90d9; --spa-text: #1c2530;
-    --spa-select-fill: #e3eefc;
+    --spa-select-fill: #e3eefc; --spa-walk: #d9534a;
   }}
   /* :root outranks a zero-specificity :where() block, so the dark tokens key on the class */
   :root.wa-dark {{
     --spa-surface: #15191e; --spa-surface-2: #1d232b; --spa-border: #333b45;
     --spa-muted: #9aa3ad; --spa-accent: #8fb4dd; --spa-text: #d7dce2;
-    --spa-select-fill: #263a52;
+    --spa-select-fill: #263a52; --spa-walk: #ff8a76;
     color-scheme: dark;
   }}
   body {{ margin: 0; min-height: 100vh; background: var(--spa-surface-2); color: var(--spa-text);
@@ -220,7 +241,7 @@ STYLES = f"""
   .status strong, .active-chip em {{ min-width: 3rem; min-height: 1.3rem; padding: .1rem .55rem;
     border-radius: 999px; background: var(--spa-surface-2); border: 1px solid var(--spa-border);
     font-style: normal; font-weight: 600; }}
-  .active-chip em {{ color: var(--spa-accent); border-color: var(--spa-accent); }}
+  .active-chip em {{ color: var(--spa-walk); border-color: var(--spa-walk); }}
   .toolbar {{ display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }}
   .segmented {{ display: inline-flex; border: 1px solid var(--spa-border); border-radius: .6rem; overflow: hidden; }}
   .seg {{ padding: .4rem .85rem; border: none; background: var(--spa-surface); color: var(--spa-muted);

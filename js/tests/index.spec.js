@@ -393,6 +393,16 @@ test("the example's node context menu opens at the pointer with graph context", 
   await menu.getByRole("button", { name: "Select", exact: true }).click();
   await expect(page.locator(".status strong")).toHaveText("rows"); // the edge's label round-trips
   await expect(menu).toBeHidden();
+  // and the selected edge stays highlighted (blue selection, distinct from the red walk)
+  await expect
+    .poll(() =>
+      page
+        .locator(
+          'spaday-dagre [data-edge-label="rows"] .spaday-dagre-edge-line',
+        )
+        .evaluate((el) => getComputedStyle(el).stroke),
+    )
+    .toBe("rgb(74, 144, 217)");
 });
 
 test("the example is live over the wire: pushed highlights and echoed selection", async ({
