@@ -150,6 +150,11 @@ class SpadayDagre extends HTMLElement {
   #view = { x: 0, y: 0, k: 1 };
   #controls = false;
   #controlsEl: HTMLDivElement | null = null;
+  // keeps the control pad beside the graph as the host or graph resizes
+  #resize =
+    typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => this.#placeControls())
+      : null;
   #frame = 0;
   #dragged = false;
 
@@ -302,8 +307,8 @@ class SpadayDagre extends HTMLElement {
     this.#svg = svg;
     this.#viewport = viewport;
     this.#wireZoom(svg);
-    // the frame shrink-wraps the svg (inline-block), so the control overlay anchors to the
-    // graph's own box rather than the host's full width
+    // the frame fills the host — the component's size dictates it, and the svg scales into it
+    // (max-width/height resolve against the frame's definite size) — with the graph centered
     const frame = document.createElement("div");
     frame.className = "spaday-dagre-frame";
     frame.append(svg);
@@ -353,7 +358,7 @@ class SpadayDagre extends HTMLElement {
     if (!this.#controls || !this.#svg) {
       this.#controlsEl?.remove();
       this.#controlsEl = null;
-      this.#svg?.parentElement?.classList.remove("spaday-dagre-has-controls");
+      this.#resize?.disconnect();
       return;
     }
     if (!this.#controlsEl) {
@@ -382,9 +387,38 @@ class SpadayDagre extends HTMLElement {
       this.#controlsEl = pad;
     }
     const frame = this.#svg.parentElement;
-    if (frame && this.#controlsEl.parentNode !== frame)
+    if (frame && this.#controlsEl.parentNode !== frame) {
       frame.append(this.#controlsEl);
-    frame?.classList.add("spaday-dagre-has-controls");
+      this.#resize?.observe(frame);
+      this.#resize?.observe(this.#svg);
+    }
+    this.#placeControls();
+  }
+
+  // Beside the graph's bottom-right corner when there is room, clamped inside the frame
+  // (over the corner) when there is not. Re-run by the ResizeObserver on any host or
+  // graph size change.
+  #placeControls(): void {
+    const pad = this.#controlsEl;
+    const svg = this.#svg;
+    const frame = svg?.parentElement;
+    if (!pad || !svg || !frame) return;
+    const fr = frame.getBoundingClientRect();
+    const sr = svg.getBoundingClientRect();
+    const gap = 10;
+    const margin = 4;
+    const padW = pad.offsetWidth || 84;
+    const padH = pad.offsetHeight || 84;
+    let left = sr.right - fr.left + gap;
+    if (left + padW > fr.width - margin)
+      left = Math.max(margin, fr.width - padW - margin);
+    let top = sr.bottom - fr.top - padH;
+    top = Math.min(
+      Math.max(margin, top),
+      Math.max(margin, fr.height - padH - margin),
+    );
+    pad.style.left = `${left}px`;
+    pad.style.top = `${top}px`;
   }
 
   // client pixel -> svg user units (the svg may be shrunk by max-width: 100%)

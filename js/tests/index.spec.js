@@ -472,3 +472,45 @@ test("optional controls pan the diagram and reset the view", async ({
   expect(r.reset).toEqual({ x: 0, y: 0, k: 1 });
   expect(r.removed).toBe(true);
 });
+
+test("the frame tracks the host's size, including dynamic resize", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(async () => {
+    const graph = document.createElement("spaday-dagre");
+    graph.style.cssText = "width:600px;height:400px";
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+    };
+    document.body.appendChild(graph);
+    const frame = graph.querySelector(".spaday-dagre-frame");
+    const svg = graph.querySelector("svg");
+    const at = () => ({
+      frame: frame.getBoundingClientRect(),
+      host: graph.getBoundingClientRect(),
+      svg: svg.getBoundingClientRect(),
+    });
+    const sized = at();
+    graph.controls = true;
+    graph.style.cssText = "width:300px;height:150px"; // shrink: CSS scales, the observer re-places the pad
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const resized = at();
+    const pad = graph
+      .querySelector(".spaday-dagre-controls")
+      .getBoundingClientRect();
+    return { sized, resized, pad };
+  });
+  // the host dictates the frame, before and after resize
+  expect(r.sized.frame.width).toBeCloseTo(r.sized.host.width, 0);
+  expect(r.sized.frame.height).toBeCloseTo(r.sized.host.height, 0);
+  expect(r.resized.frame.width).toBeCloseTo(r.resized.host.width, 0);
+  expect(r.resized.frame.height).toBeCloseTo(r.resized.host.height, 0);
+  // the graph centers in a larger frame and scales down into a smaller one
+  expect(r.sized.svg.left).toBeGreaterThan(r.sized.frame.left);
+  expect(r.resized.svg.height).toBeLessThanOrEqual(r.resized.frame.height + 1);
+  // the observer kept the control pad inside the shrunken frame
+  expect(r.pad.right).toBeLessThanOrEqual(r.resized.frame.right + 1);
+  expect(r.pad.bottom).toBeLessThanOrEqual(r.resized.frame.bottom + 1);
+});
