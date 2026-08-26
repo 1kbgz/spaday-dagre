@@ -43,33 +43,50 @@ test("lays out and renders nodes, edges, labels, and re-layouts on direction cha
   expect(r.lrHorizontal).toBe(true);
 });
 
-test("bubbles scalar node clicks and object edge clicks", async ({ page }) => {
+test("bubbles rich node and edge clicks with pointer coordinates", async ({
+  page,
+}) => {
   await page.goto("/dist/index.html");
   const r = await page.evaluate(() => {
     const graph = document.createElement("spaday-dagre");
     graph.graph = {
-      nodes: [{ id: "a" }, { id: "b" }],
+      nodes: [{ id: "a", label: "Alpha" }, { id: "b" }],
       edges: [{ source: "a", target: "b", label: "flow" }],
     };
     document.body.appendChild(graph);
     const seen = [];
     document.addEventListener("dagre-node-click", (e) => seen.push(e.detail));
     document.addEventListener("dagre-edge-click", (e) => seen.push(e.detail));
-    graph
-      .querySelector('[data-node-id="a"] rect')
-      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    graph
-      .querySelector(".spaday-dagre-edge-hit")
-      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    const click = (el) =>
+      el.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, clientX: 42, clientY: 24 }),
+      );
+    click(graph.querySelector('[data-node-id="a"] rect'));
+    click(graph.querySelector('[data-node-id="b"] rect'));
+    click(graph.querySelector(".spaday-dagre-edge-hit"));
     // the label itself is a click target for its edge
-    graph
-      .querySelector(".spaday-dagre-edge-label")
-      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    click(graph.querySelector(".spaday-dagre-edge-label"));
     return seen;
   });
-  expect(r[0]).toBe("a"); // scalar detail — event_value() lands the id in the store
-  expect(r[1]).toEqual({ source: "a", target: "b", label: "flow" });
-  expect(r[2]).toEqual({ source: "a", target: "b", label: "flow" });
+  // rich detail, matching the contextmenu events — event_value("id")/("x")/("y") paths work
+  expect(r[0]).toEqual({ id: "a", label: "Alpha", x: 42, y: 24 });
+  expect(r[1]).toEqual({ id: "b", label: "b", x: 42, y: 24 }); // label defaults to the id
+  expect(typeof r[0].x).toBe("number");
+  expect(typeof r[0].y).toBe("number");
+  expect(r[2]).toEqual({
+    source: "a",
+    target: "b",
+    label: "flow",
+    x: 42,
+    y: 24,
+  });
+  expect(r[3]).toEqual({
+    source: "a",
+    target: "b",
+    label: "flow",
+    x: 42,
+    y: 24,
+  });
 });
 
 test("hovering an edge highlights its endpoint nodes", async ({ page }) => {
@@ -677,4 +694,78 @@ test("edges meet diamond and ellipse boundaries instead of the layout bbox", asy
   });
   expect(Math.abs(r.diamond - 1)).toBeLessThan(0.05);
   expect(Math.abs(r.ellipse - 1)).toBeLessThan(0.05);
+});
+
+test("consumer --dagre-* tokens re-theme both modes; emphasis wears the accent", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.graph = {
+      nodes: [{ id: "a", class: "emphasis" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+    };
+    document.body.appendChild(graph);
+    const style = (id) =>
+      getComputedStyle(graph.querySelector(`[data-node-id="${id}"] rect`));
+    const before = style("b").fill;
+    graph.style.setProperty("--dagre-node-fill", "rgb(10, 20, 30)");
+    graph.style.setProperty("--dagre-accent", "rgb(200, 50, 100)");
+    const themed = style("b").fill;
+    document.documentElement.classList.add("wa-dark");
+    const themedDark = style("b").fill;
+    document.documentElement.classList.remove("wa-dark");
+    const emphasis = {
+      stroke: style("a").stroke,
+      width: style("a").strokeWidth,
+    };
+    return { before, themed, themedDark, emphasis };
+  });
+  expect(r.before).toBe("rgb(250, 250, 250)"); // --spa-surface-2 default holds without tokens
+  expect(r.themed).toBe("rgb(10, 20, 30)"); // a host token overrides the default...
+  expect(r.themedDark).toBe("rgb(10, 20, 30)"); // ...and wins in dark mode too
+  expect(r.emphasis.stroke).toBe("rgb(200, 50, 100)"); // config class "emphasis" is forwarded
+  expect(r.emphasis.width).toBe("2.5px"); // and outlined with the accent
+});
+
+test("maxLabelWidth caps node width and ellipsizes with a full-label tooltip", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const LONG =
+    "an extremely long pipeline stage label that would widen the node without bound";
+  const r = await page.evaluate((long) => {
+    const graph = document.createElement("spaday-dagre");
+    graph.transition = 0;
+    graph.maxLabelWidth = 120;
+    graph.graph = {
+      nodes: [
+        { id: "long", label: long },
+        { id: "short", label: "Short" },
+      ],
+      edges: [{ source: "long", target: "short" }],
+    };
+    document.body.appendChild(graph);
+    const group = (id) => graph.querySelector(`[data-node-id="${id}"]`);
+    const width = (id) =>
+      Number(group(id).querySelector("rect").getAttribute("width"));
+    const capped = {
+      width: width("long"),
+      text: group("long").querySelector("text").textContent,
+      title: group("long").querySelector("title")?.textContent ?? null,
+    };
+    const uncapped = {
+      text: group("short").querySelector("text").textContent,
+      title: group("short").querySelector("title")?.textContent ?? null,
+    };
+    graph.maxLabelWidth = null; // unsetting re-renders at the natural width
+    return { capped, uncapped, restored: width("long") };
+  }, LONG);
+  expect(r.capped.width).toBeLessThanOrEqual(120 + 33); // label cap + PAD_X * 2
+  expect(r.capped.text.endsWith("…")).toBe(true);
+  expect(r.capped.title).toBe(LONG); // the full label rides a native tooltip
+  expect(r.uncapped.text).toBe("Short"); // labels that fit are untouched
+  expect(r.uncapped.title).toBeNull();
+  expect(r.restored).toBeGreaterThan(200);
 });

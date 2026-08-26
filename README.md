@@ -18,10 +18,10 @@ dagre graph rendering for spaday
 serializable node/edge config, laid out by [@dagrejs/dagre](https://github.com/dagrejs/dagre) and
 drawn as light-DOM SVG. Colors ride the spaday shell's `--spa-*` tokens, so
 `bind_root_class("wa-dark", ...)` re-themes the graph with the rest of the page, and application CSS
-reaches every shape. `dagre-node-click` bubbles the node id (scalar `detail`, so
-`SetField("selected", event_value())` just works); `dagre-edge-click` bubbles `{source, target}`.
-Right-clicking a node or edge bubbles `dagre-node-contextmenu` / `dagre-edge-contextmenu` with the
-graph context plus the pointer position, pairing with spaday's `open_popup` for context menus.
+reaches every shape. `dagre-node-click` bubbles `{id, label, x, y}` and `dagre-edge-click` bubbles
+`{source, target, label, x, y}` — the graph context plus the pointer position — so
+`SetField("selected", event_value("id"))` selects and `open_popup(..., x=event_value("x"), y=event_value("y"))` positions. Right-clicking a node or edge bubbles `dagre-node-contextmenu` /
+`dagre-edge-contextmenu` with the same shape, pairing with spaday's `open_popup` for context menus.
 
 Navigation is dagre-d3-class: cursor-anchored wheel zoom, drag pan (clamped so the graph can never
 be dragged out of view), double-click reset, and an optional GitHub-mermaid-style D-pad
@@ -46,9 +46,30 @@ app = serve(element("main").child(graph), packages=[package])
 ```
 
 Node sizes default from label measurement; per-node `width`/`height`/`class`/`shape` (`rect`,
-`diamond`, `ellipse`) and per-edge `label`/`class` override. `layout` passes through to dagre (`rankdir`, `align`, `nodesep`,
+`diamond`, `ellipse`) and per-edge `label`/`class` override. The `maxLabelWidth` prop (px) caps
+label-driven width: wider labels are ellipsized, with the full label as a native tooltip. `layout`
+passes through to dagre (`rankdir`, `align`, `nodesep`,
 `ranksep`, `edgesep`, `marginx`/`marginy`, `ranker`). Installing the package registers the `dagre`
 entry point, so `packages=["dagre"]` also works.
+
+## Theming
+
+Component-scoped tokens layer over the shell's `--spa-*` tokens, so an application can theme the
+graph from the host (or any ancestor) without knowing its internals — a token set once wins in both
+light and dark page modes:
+
+| Token                 | Themes                                                |
+| --------------------- | ----------------------------------------------------- |
+| `--dagre-node-fill`   | node shape fill                                       |
+| `--dagre-node-stroke` | node shape outline                                    |
+| `--dagre-node-text`   | node label text                                       |
+| `--dagre-edge-stroke` | edge lines and arrowheads                             |
+| `--dagre-edge-label`  | edge label text                                       |
+| `--dagre-accent`      | hover, connected-endpoint, and `emphasis` affordances |
+
+Node and edge `class` values are forwarded onto the rendered `<g>` groups (alongside
+`spaday-dagre-node` / `spaday-dagre-edge`), so custom classes are CSS-targetable directly. One
+variant is built in: a node or edge whose `class` includes `emphasis` gets an accent outline.
 
 ## Run the local example
 

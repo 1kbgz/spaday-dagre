@@ -54,6 +54,16 @@ function measure(text: string, font: string): number {
   return measureContext.measureText(text).width;
 }
 
+// trim to the widest prefix that fits `max` with a trailing ellipsis appended
+function ellipsize(text: string, font: string, max: number): string {
+  if (measure(text, font) <= max) return text;
+  let out = text;
+  while (out.length && measure(`${out}…`, font) > max) {
+    out = out.slice(0, -1);
+  }
+  return `${out}…`;
+}
+
 type Point = { x: number; y: number };
 
 // resample dagre's polyline to a fixed number of evenly spaced points (by arc length),
@@ -152,13 +162,16 @@ interface EdgeLaid {
 // the ecosystem's page-mode convention. Interactivity is what dagre-d3 was liked for:
 // wheel zoom (cursor-anchored) + drag pan + double-click reset (`zoomable`), animated
 // re-layout with per-element identity preserved across renders (`transition`, ms), and
-// CSS hover affordances. `dagre-node-click` / `dagre-edge-click` bubble with the node
-// id / edge endpoints in `detail`; a drag suppresses the trailing click.
+// CSS hover affordances. `dagre-node-click` bubbles `{id, label, x, y}` and
+// `dagre-edge-click` bubbles `{source, target, label, x, y}` — the graph context plus the
+// pointer's client coordinates, like the contextmenu events — so spaday's `event_value("id")`
+// / `event_value("x")` paths walk the detail; a drag suppresses the trailing click.
 class SpadayDagre extends HTMLElement {
   #graph: DagreGraphConfig = {};
   #layout: DagreLayoutConfig = {};
   #zoomable = true;
   #transition = 250;
+  #maxLabelWidth: number | null = null;
   #rendered = false;
   #svg: SVGSVGElement | null = null;
   #viewport: SVGGElement | null = null;
@@ -191,12 +204,15 @@ class SpadayDagre extends HTMLElement {
       if (this.#dragged) return; // a pan, not a selection
       const target = event.target as Element;
       const node = target.closest("[data-node-id]");
+      // clicks carry the graph context plus the pointer position, mirroring the
+      // contextmenu events, so event_value("id")/("x")/("y") paths walk the detail
+      const position = { x: event.clientX, y: event.clientY };
       if (node) {
-        // scalar detail: spaday's event_value() maps to `detail`, so the id lands in
-        // the store directly via SetField("selected", event_value())
+        const id = node.getAttribute("data-node-id") ?? "";
+        const config = this.#graph.nodes?.find((n) => n.id === id);
         this.dispatchEvent(
           new CustomEvent("dagre-node-click", {
-            detail: node.getAttribute("data-node-id"),
+            detail: { id, label: config?.label ?? id, ...position },
             bubbles: true,
             composed: true,
           }),
@@ -211,6 +227,7 @@ class SpadayDagre extends HTMLElement {
               source: edge.getAttribute("data-edge-source"),
               target: edge.getAttribute("data-edge-target"),
               label: edge.getAttribute("data-edge-label") ?? undefined,
+              ...position,
             },
             bubbles: true,
             composed: true,
@@ -286,6 +303,16 @@ class SpadayDagre extends HTMLElement {
   }
   get controls(): boolean {
     return this.#controls;
+  }
+
+  /** Cap on a node label's measured width in px: wider labels stop widening the node and
+   * render ellipsized, with the full label as a native tooltip. Unset keeps natural widths. */
+  set maxLabelWidth(value: number | null) {
+    this.#maxLabelWidth = Number(value) || null;
+    if (this.#rendered) this.#render();
+  }
+  get maxLabelWidth(): number | null {
+    return this.#maxLabelWidth;
   }
 
   /** Re-layout transition duration in ms; 0 disables (also disabled by reduced motion).
@@ -585,15 +612,20 @@ class SpadayDagre extends HTMLElement {
     const g = new dagre.graphlib.Graph({ multigraph: true });
     g.setGraph({ marginx: 8, marginy: 8, ...this.#layout });
     g.setDefaultEdgeLabel(() => ({}));
+    const cap = this.#maxLabelWidth;
     for (const node of nodes) {
       const label = node.label ?? node.id;
+      const measured = measure(label, NODE_FONT);
       // Diamonds inflate by sqrt(2) per axis (as in dagre-d3) so the label box
       // still fits inside the rotated square.
       const inflate = node.shape === "diamond" ? Math.SQRT2 : 1;
       g.setNode(node.id, {
         width:
           (node.width ??
-            Math.max(MIN_W, measure(label, NODE_FONT) + PAD_X * 2)) * inflate,
+            Math.max(
+              MIN_W,
+              (cap ? Math.min(measured, cap) : measured) + PAD_X * 2,
+            )) * inflate,
         height: (node.height ?? MIN_H + PAD_Y) * inflate,
       });
     }
@@ -764,8 +796,21 @@ class SpadayDagre extends HTMLElement {
         "class",
         `spaday-dagre-node ${node.class ?? ""}`.trim(),
       );
+      const full = node.label ?? node.id;
+      const shown = cap ? ellipsize(full, NODE_FONT, cap) : full;
       const label = group.querySelector("text");
-      if (label) label.textContent = node.label ?? node.id;
+      if (label) label.textContent = shown;
+      // an ellipsized label keeps the full text reachable as a native tooltip
+      let title = group.querySelector<SVGTitleElement>("title");
+      if (shown !== full) {
+        if (!title) {
+          title = el("title", {});
+          group.prepend(title);
+        }
+        title.textContent = full;
+      } else {
+        title?.remove();
+      }
       const from = this.#nodeLaid.get(node.id);
       if (!from || !duration) {
         this.#nodeShape(group, target);

@@ -53,6 +53,13 @@ class SpadayDagre(Component):
                 default=None,
                 description="Re-layout transition duration in milliseconds (default 250); 0 disables, and reduced-motion preferences disable it automatically.",
             ),
+            PropertySchema(
+                name="maxLabelWidth",
+                kind="number",
+                choices=(),
+                default=None,
+                description="Cap on a node label's measured width in px: wider labels stop widening the node and render ellipsized, with the full label as a native tooltip. Unset keeps natural widths.",
+            ),
         ),
         events=("dagre-node-click", "dagre-edge-click"),
         slots=(),
@@ -67,6 +74,7 @@ class SpadayDagre(Component):
         zoomable: bool | None = None,
         controls: bool | None = None,
         transition: float | None = None,
+        maxLabelWidth: float | None = None,
         **props: Any,
     ) -> None:
         super().__init__(
@@ -78,6 +86,7 @@ class SpadayDagre(Component):
                 "zoomable": zoomable,
                 "controls": controls,
                 "transition": transition,
+                "maxLabelWidth": maxLabelWidth,
             },
             **props,
         )
