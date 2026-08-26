@@ -53,14 +53,17 @@ develop = [
     "hatchling",
     "mdformat",
     "mdformat-tables>=1",
+    "pydantic>=2",
     "pytest",
     "pytest-cov",
     "ruff",
     "starlette",
+    "transports",
     "twine",
     "ty",
     "uvicorn",
     "uv",
+    "websockets",
     "wheel",
 ]
 
