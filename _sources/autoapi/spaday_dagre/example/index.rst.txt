@@ -5,8 +5,9 @@ spaday_dagre.example
 
 .. autoapi-nested-parse::
 
-   A small pipeline DAG: store-driven graph mutation, node-click status, and the
-   spaday page-mode theme convention (``wa-dark``) re-theming the graph.
+   A small pipeline DAG: store-driven graph mutation, node-click status, a node
+   context menu, and the spaday page-mode theme convention (``wa-dark``) re-theming
+   the graph.
 
    Run ``python -m spaday_dagre.example`` and open http://127.0.0.1:8016.
 
@@ -19,6 +20,7 @@ Attributes
 
    spaday_dagre.example.GRAPH
    spaday_dagre.example.graph
+   spaday_dagre.example.menu
    spaday_dagre.example.controls
    spaday_dagre.example.status
    spaday_dagre.example.page
@@ -31,6 +33,8 @@ Module Contents
 .. py:data:: GRAPH
 
 .. py:data:: graph
+
+.. py:data:: menu
 
 .. py:data:: controls
 

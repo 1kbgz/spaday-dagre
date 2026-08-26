@@ -246,8 +246,9 @@
         <article role="main" id="furo-main-content">
           <section id="module-spaday_dagre.example">
 <span id="spaday-dagre-example"></span><h1>spaday_dagre.example<a class="headerlink" href="#module-spaday_dagre.example" title="Link to this heading">¶</a></h1>
-<p>A small pipeline DAG: store-driven graph mutation, node-click status, and the
-spaday page-mode theme convention (<code class="docutils literal notranslate"><span class="pre">wa-dark</span></code>) re-theming the graph.</p>
+<p>A small pipeline DAG: store-driven graph mutation, node-click status, a node
+context menu, and the spaday page-mode theme convention (<code class="docutils literal notranslate"><span class="pre">wa-dark</span></code>) re-theming
+the graph.</p>
 <p>Run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">spaday_dagre.example</span></code> and open <a class="reference external" href="http://127.0.0.1:8016">http://127.0.0.1:8016</a>.</p>
 <section id="attributes">
 <h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">¶</a></h2>
@@ -260,16 +261,19 @@ spaday page-mode theme convention (<code class="docutils literal notranslate"><s
 <tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.graph" title="spaday_dagre.example.graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.controls" title="spaday_dagre.example.controls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">controls</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.menu" title="spaday_dagre.example.menu"><code class="xref py py-obj docutils literal notranslate"><span class="pre">menu</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.status" title="spaday_dagre.example.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.controls" title="spaday_dagre.example.controls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">controls</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.page" title="spaday_dagre.example.page"><code class="xref py py-obj docutils literal notranslate"><span class="pre">page</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.status" title="spaday_dagre.example.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.app" title="spaday_dagre.example.app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">app</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.page" title="spaday_dagre.example.page"><code class="xref py py-obj docutils literal notranslate"><span class="pre">page</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.app" title="spaday_dagre.example.app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">app</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -286,6 +290,11 @@ spaday page-mode theme convention (<code class="docutils literal notranslate"><s
 <dl class="py data">
 <dt class="sig sig-object py" id="spaday_dagre.example.graph">
 <span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">graph</span></span><a class="headerlink" href="#spaday_dagre.example.graph" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spaday_dagre.example.menu">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">menu</span></span><a class="headerlink" href="#spaday_dagre.example.menu" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
@@ -363,6 +372,7 @@ spaday page-mode theme convention (<code class="docutils literal notranslate"><s
 <li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
 <li><a class="reference internal" href="#spaday_dagre.example.GRAPH"><code class="docutils literal notranslate"><span class="pre">GRAPH</span></code></a></li>
 <li><a class="reference internal" href="#spaday_dagre.example.graph"><code class="docutils literal notranslate"><span class="pre">graph</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example.menu"><code class="docutils literal notranslate"><span class="pre">menu</span></code></a></li>
 <li><a class="reference internal" href="#spaday_dagre.example.controls"><code class="docutils literal notranslate"><span class="pre">controls</span></code></a></li>
 <li><a class="reference internal" href="#spaday_dagre.example.status"><code class="docutils literal notranslate"><span class="pre">status</span></code></a></li>
 <li><a class="reference internal" href="#spaday_dagre.example.page"><code class="docutils literal notranslate"><span class="pre">page</span></code></a></li>
