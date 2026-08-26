@@ -1,7 +1,14 @@
 /* Graph colors ride the spaday shell's --spa-* tokens, following spaday's page-mode
  * convention: `wa-dark` on the root re-themes the graph, `wa-light` flips a nested
  * island back, and an application that re-themes the shell carries the graph with it.
- * The fallbacks keep a standalone page coherent in both modes. */
+ * The fallbacks keep a standalone page coherent in both modes.
+ *
+ * On top of the shell tokens sit component-scoped --dagre-* tokens, so an application
+ * can theme the graph without knowing its internals: --dagre-node-fill,
+ * --dagre-node-stroke, --dagre-node-text, --dagre-edge-stroke, --dagre-edge-label, and
+ * --dagre-accent (hover/connected/emphasis affordances). Each defaults to the existing
+ * --spa-* value (or the dark-mode literal inside `wa-dark`), so a consumer token set on
+ * the host or an ancestor wins in both modes. */
 
 spaday-dagre {
   display: block;
@@ -22,13 +29,13 @@ spaday-dagre svg {
 }
 
 spaday-dagre .spaday-dagre-node :is(rect, ellipse, polygon) {
-  fill: var(--spa-surface-2, #fafafa);
-  stroke: var(--spa-muted, #666);
+  fill: var(--dagre-node-fill, var(--spa-surface-2, #fafafa));
+  stroke: var(--dagre-node-stroke, var(--spa-muted, #666));
   stroke-width: 1;
 }
 
 spaday-dagre .spaday-dagre-node text {
-  fill: #3f464d;
+  fill: var(--dagre-node-text, #3f464d);
   font:
     12px system-ui,
     sans-serif;
@@ -37,12 +44,12 @@ spaday-dagre .spaday-dagre-node text {
 
 spaday-dagre .spaday-dagre-edge-line {
   fill: none;
-  stroke: var(--spa-muted, #666);
+  stroke: var(--dagre-edge-stroke, var(--spa-muted, #666));
   stroke-width: 1.5;
 }
 
 spaday-dagre .spaday-dagre-edge-label {
-  fill: var(--spa-muted, #666);
+  fill: var(--dagre-edge-label, var(--spa-muted, #666));
   font:
     11px system-ui,
     sans-serif;
@@ -53,53 +60,53 @@ spaday-dagre .spaday-dagre-edge-label {
 }
 
 spaday-dagre .spaday-dagre-arrow path {
-  fill: var(--spa-muted, #666);
+  fill: var(--dagre-edge-stroke, var(--spa-muted, #666));
   fill: context-stroke;
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-node :is(rect, ellipse, polygon) {
-  fill: #242d38;
-  stroke: #4a5663;
+  fill: var(--dagre-node-fill, #242d38);
+  stroke: var(--dagre-node-stroke, #4a5663);
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-node text {
-  fill: #d7dce2;
+  fill: var(--dagre-node-text, #d7dce2);
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-edge-line {
-  stroke: #5a6672;
+  stroke: var(--dagre-edge-stroke, #5a6672);
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-edge-label {
-  fill: #aab3bd;
+  fill: var(--dagre-edge-label, #aab3bd);
   stroke: #15191e;
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-arrow path {
-  fill: #5a6672;
+  fill: var(--dagre-edge-stroke, #5a6672);
   fill: context-stroke;
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-node :is(rect, ellipse, polygon) {
-  fill: var(--spa-surface-2, #fafafa);
-  stroke: var(--spa-muted, #666);
+  fill: var(--dagre-node-fill, var(--spa-surface-2, #fafafa));
+  stroke: var(--dagre-node-stroke, var(--spa-muted, #666));
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-node text {
-  fill: #3f464d;
+  fill: var(--dagre-node-text, #3f464d);
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-edge-line {
-  stroke: var(--spa-muted, #666);
+  stroke: var(--dagre-edge-stroke, var(--spa-muted, #666));
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-edge-label {
-  fill: var(--spa-muted, #666);
+  fill: var(--dagre-edge-label, var(--spa-muted, #666));
   stroke: var(--spa-surface, #fff);
 }
 
 :where(.wa-light) spaday-dagre .spaday-dagre-arrow path {
-  fill: var(--spa-muted, #666);
+  fill: var(--dagre-edge-stroke, var(--spa-muted, #666));
   fill: context-stroke;
 }
 
@@ -116,7 +123,7 @@ spaday-dagre .spaday-dagre-node {
 }
 
 spaday-dagre .spaday-dagre-node:hover :is(rect, ellipse, polygon) {
-  stroke: var(--spa-accent, #4a90d9);
+  stroke: var(--dagre-accent, var(--spa-accent, #4a90d9));
 }
 
 spaday-dagre .spaday-dagre-edge {
@@ -124,7 +131,7 @@ spaday-dagre .spaday-dagre-edge {
 }
 
 spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
-  stroke: var(--spa-accent, #4a90d9);
+  stroke: var(--dagre-accent, var(--spa-accent, #4a90d9));
   stroke-width: 2;
 }
 
@@ -132,32 +139,32 @@ spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
   spaday-dagre
   .spaday-dagre-node:hover
   :is(rect, ellipse, polygon) {
-  stroke: #8fb4dd;
+  stroke: var(--dagre-accent, #8fb4dd);
 }
 
 :where(.wa-dark) spaday-dagre .spaday-dagre-edge:hover .spaday-dagre-edge-line {
-  stroke: #8fb4dd;
+  stroke: var(--dagre-accent, #8fb4dd);
 }
 
 :where(.wa-light)
   spaday-dagre
   .spaday-dagre-node:hover
   :is(rect, ellipse, polygon) {
-  stroke: var(--spa-accent, #4a90d9);
+  stroke: var(--dagre-accent, var(--spa-accent, #4a90d9));
 }
 
 :where(.wa-light)
   spaday-dagre
   .spaday-dagre-edge:hover
   .spaday-dagre-edge-line {
-  stroke: var(--spa-accent, #4a90d9);
+  stroke: var(--dagre-accent, var(--spa-accent, #4a90d9));
 }
 
 /* endpoints of a hovered or clicked edge light up with the edge */
 spaday-dagre
   .spaday-dagre-node.spaday-dagre-connected
   :is(rect, ellipse, polygon) {
-  stroke: var(--spa-accent, #4a90d9);
+  stroke: var(--dagre-accent, var(--spa-accent, #4a90d9));
   stroke-width: 1.5;
 }
 
@@ -165,14 +172,54 @@ spaday-dagre
   spaday-dagre
   .spaday-dagre-node.spaday-dagre-connected
   :is(rect, ellipse, polygon) {
-  stroke: #8fb4dd;
+  stroke: var(--dagre-accent, #8fb4dd);
 }
 
 :where(.wa-light)
   spaday-dagre
   .spaday-dagre-node.spaday-dagre-connected
   :is(rect, ellipse, polygon) {
-  stroke: var(--spa-accent, #4a90d9);
+  stroke: var(--dagre-accent, var(--spa-accent, #4a90d9));
+}
+
+/* built-in emphasis variant: a node/edge config whose `class` includes "emphasis" gets
+ * an accent outline (custom classes are forwarded onto the rendered groups) */
+spaday-dagre .spaday-dagre-node.emphasis :is(rect, ellipse, polygon) {
+  stroke: var(--dagre-accent, var(--spa-accent, #4a90d9));
+  stroke-width: 2.5;
+}
+
+spaday-dagre .spaday-dagre-edge.emphasis .spaday-dagre-edge-line {
+  stroke: var(--dagre-accent, var(--spa-accent, #4a90d9));
+  stroke-width: 2.5;
+}
+
+:where(.wa-dark)
+  spaday-dagre
+  .spaday-dagre-node.emphasis
+  :is(rect, ellipse, polygon) {
+  stroke: var(--dagre-accent, #8fb4dd);
+}
+
+:where(.wa-dark)
+  spaday-dagre
+  .spaday-dagre-edge.emphasis
+  .spaday-dagre-edge-line {
+  stroke: var(--dagre-accent, #8fb4dd);
+}
+
+:where(.wa-light)
+  spaday-dagre
+  .spaday-dagre-node.emphasis
+  :is(rect, ellipse, polygon) {
+  stroke: var(--dagre-accent, var(--spa-accent, #4a90d9));
+}
+
+:where(.wa-light)
+  spaday-dagre
+  .spaday-dagre-edge.emphasis
+  .spaday-dagre-edge-line {
+  stroke: var(--dagre-accent, var(--spa-accent, #4a90d9));
 }
 
 /* optional view controls (`controls` prop): pan arrows around a center reset circle */

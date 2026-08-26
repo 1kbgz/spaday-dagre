@@ -89,7 +89,8 @@ graph = (
     .bind("data-selected", "pipeline.selected")
     # selection is a server round trip: the edit rides the wire up and takes effect when the
     # server echoes it back into the mirrored model, so every tab agrees
-    .on("dagre-node-click", SendPatch("pipeline", "selected", event_value()))
+    # (the click detail is rich — {id, label, x, y} — so the path picks the id)
+    .on("dagre-node-click", SendPatch("pipeline", "selected", event_value("id")))
     # the selection key matches the menu's: the label, else "source → target" — so every
     # edge selection has a stable value the highlight CSS can match
     .on(
