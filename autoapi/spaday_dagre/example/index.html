@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html"><link rel="prev" title="spaday_dagre.components" href="../components/index.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
-        <title>spaday_dagre.example - spaday-dagre v0.1.1</title>
+        <title>spaday_dagre.example - spaday-dagre v0.1.2</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
@@ -167,7 +167,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../../index.html"><div class="brand">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.1.1</code></div></a>
+      <a href="../../../index.html"><div class="brand">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.1.2</code></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -188,7 +188,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
   
-  <span class="sidebar-brand-text">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.1.1</code></span>
+  <span class="sidebar-brand-text">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.1.2</code></span>
   
 </a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -246,16 +246,38 @@
         <article role="main" id="furo-main-content">
           <section id="module-spaday_dagre.example">
 <span id="spaday-dagre-example"></span><h1>spaday_dagre.example<a class="headerlink" href="#module-spaday_dagre.example" title="Link to this heading">¶</a></h1>
-<p>A small pipeline DAG: store-driven graph mutation, node-click status, a node
-context menu, and the spaday page-mode theme convention (<code class="docutils literal notranslate"><span class="pre">wa-dark</span></code>) re-theming
-the graph.</p>
+<p>A pipeline-explorer showcase, live over a transports wire: the server sweeps an
+<em>active</em> highlight from ingest through deploy — walking the nodes and the edges
+between them — pushing each step to every client, and
+node/edge selection rides back to the server as model edits (the same round trip
+the other peers’ examples exercise). Also on show: node shapes, a right-click
+context menu for nodes and edges, view controls, host-driven sizing, and the
+spaday page-mode theme convention (<code class="docutils literal notranslate"><span class="pre">wa-dark</span></code>) re-theming the whole page.</p>
 <p>Run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">spaday_dagre.example</span></code> and open <a class="reference external" href="http://127.0.0.1:8016">http://127.0.0.1:8016</a>.</p>
 <section id="attributes">
 <h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">¶</a></h2>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.ORDER" title="spaday_dagre.example.ORDER"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ORDER</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.STEPS" title="spaday_dagre.example.STEPS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STEPS</span></code></a></p></td>
+<td><p></p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.GRAPH" title="spaday_dagre.example.GRAPH"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRAPH</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.pipeline" title="spaday_dagre.example.pipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pipeline</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.session" title="spaday_dagre.example.session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">session</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.server" title="spaday_dagre.example.server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">server</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example._menu_choice" title="spaday_dagre.example._menu_choice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_menu_choice</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.graph" title="spaday_dagre.example.graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph</span></code></a></p></td>
@@ -264,17 +286,59 @@ the graph.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.menu" title="spaday_dagre.example.menu"><code class="xref py py-obj docutils literal notranslate"><span class="pre">menu</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.controls" title="spaday_dagre.example.controls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">controls</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.toolbar" title="spaday_dagre.example.toolbar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">toolbar</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.status" title="spaday_dagre.example.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.page" title="spaday_dagre.example.page"><code class="xref py py-obj docutils literal notranslate"><span class="pre">page</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.active_chip" title="spaday_dagre.example.active_chip"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_chip</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.app" title="spaday_dagre.example.app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">app</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.page" title="spaday_dagre.example.page"><code class="xref py py-obj docutils literal notranslate"><span class="pre">page</span></code></a></p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example._HIGHLIGHTS" title="spaday_dagre.example._HIGHLIGHTS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_HIGHLIGHTS</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.STYLES" title="spaday_dagre.example.STYLES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STYLES</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example.app" title="spaday_dagre.example.app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">app</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.Pipeline" title="spaday_dagre.example.Pipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Pipeline</span></code></a></p></td>
+<td><p>The live model every client mirrors: the server owns <code class="docutils literal notranslate"><span class="pre">active</span></code>; clients edit <code class="docutils literal notranslate"><span class="pre">selected</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example.sweep" title="spaday_dagre.example.sweep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sweep</span></code></a>(→ None)</p></td>
+<td><p>Walk the active highlight from ingest through deploy — nodes and the edges between</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example._direction" title="spaday_dagre.example._direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_direction</span></code></a>(label, rankdir)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spaday_dagre.example._active_rule" title="spaday_dagre.example._active_rule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_active_rule</span></code></a>(→ str)</p></td>
+<td><p>The sweep's walk highlight: a red outline, distinct from the blue selection.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spaday_dagre.example._selected_edge_rule" title="spaday_dagre.example._selected_edge_rule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_selected_edge_rule</span></code></a>(→ str)</p></td>
+<td><p>A selected edge stays highlighted; its selection key is the label, else &quot;source → target&quot;.</p></td>
 </tr>
 </tbody>
 </table>
@@ -283,8 +347,66 @@ the graph.</p>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
 <dl class="py data">
+<dt class="sig sig-object py" id="spaday_dagre.example.ORDER">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">ORDER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['ingest',</span> <span class="pre">'clean',</span> <span class="pre">'features',</span> <span class="pre">'train',</span> <span class="pre">'evaluate',</span> <span class="pre">'deploy']</span></em><a class="headerlink" href="#spaday_dagre.example.ORDER" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spaday_dagre.example.STEPS">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">STEPS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#spaday_dagre.example.STEPS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="spaday_dagre.example.GRAPH">
 <span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">GRAPH</span></span><a class="headerlink" href="#spaday_dagre.example.GRAPH" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spaday_dagre.example.Pipeline">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spaday_dagre.example.Pipeline" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>The live model every client mirrors: the server owns <code class="docutils literal notranslate"><span class="pre">active</span></code>; clients edit <code class="docutils literal notranslate"><span class="pre">selected</span></code>.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spaday_dagre.example.Pipeline.active">
+<span class="sig-name descname"><span class="pre">active</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ingest'</span></em><a class="headerlink" href="#spaday_dagre.example.Pipeline.active" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spaday_dagre.example.Pipeline.selected">
+<span class="sig-name descname"><span class="pre">selected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#spaday_dagre.example.Pipeline.selected" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spaday_dagre.example.pipeline">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">pipeline</span></span><a class="headerlink" href="#spaday_dagre.example.pipeline" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spaday_dagre.example.session">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#spaday_dagre.example.session" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spaday_dagre.example.server">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">server</span></span><a class="headerlink" href="#spaday_dagre.example.server" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spaday_dagre.example.sweep">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">sweep</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#spaday_dagre.example.sweep" title="Link to this definition">¶</a></dt>
+<dd><p>Walk the active highlight from ingest through deploy — nodes and the edges between
+them — forever (server → clients).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spaday_dagre.example._menu_choice">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">_menu_choice</span></span><a class="headerlink" href="#spaday_dagre.example._menu_choice" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
@@ -297,9 +419,14 @@ the graph.</p>
 <span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">menu</span></span><a class="headerlink" href="#spaday_dagre.example.menu" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="spaday_dagre.example._direction">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rankdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spaday_dagre.example._direction" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py data">
-<dt class="sig sig-object py" id="spaday_dagre.example.controls">
-<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">controls</span></span><a class="headerlink" href="#spaday_dagre.example.controls" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="spaday_dagre.example.toolbar">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">toolbar</span></span><a class="headerlink" href="#spaday_dagre.example.toolbar" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
@@ -308,9 +435,93 @@ the graph.</p>
 <dd></dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="spaday_dagre.example.active_chip">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">active_chip</span></span><a class="headerlink" href="#spaday_dagre.example.active_chip" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="spaday_dagre.example.page">
 <span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">page</span></span><a class="headerlink" href="#spaday_dagre.example.page" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spaday_dagre.example._active_rule">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">_active_rule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#spaday_dagre.example._active_rule" title="Link to this definition">¶</a></dt>
+<dd><p>The sweep’s walk highlight: a red outline, distinct from the blue selection.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spaday_dagre.example._selected_edge_rule">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">_selected_edge_rule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#spaday_dagre.example._selected_edge_rule" title="Link to this definition">¶</a></dt>
+<dd><p>A selected edge stays highlighted; its selection key is the label, else “source → target”.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spaday_dagre.example._HIGHLIGHTS">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">_HIGHLIGHTS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#spaday_dagre.example._HIGHLIGHTS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spaday_dagre.example.STYLES">
+<span class="sig-prename descclassname"><span class="pre">spaday_dagre.example.</span></span><span class="sig-name descname"><span class="pre">STYLES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Multiline-String</span></em><a class="headerlink" href="#spaday_dagre.example.STYLES" title="Link to this definition">¶</a></dt>
+<dd><details><summary>Show Value</summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""</span>
+<span class="sd">&lt;style&gt;</span>
+<span class="sd">  :root {</span>
+<span class="sd">    --spa-surface: #ffffff; --spa-surface-2: #f4f6f8; --spa-border: #e3e6ea;</span>
+<span class="sd">    --spa-muted: #5f6b76; --spa-accent: #4a90d9; --spa-text: #1c2530;</span>
+<span class="sd">    --spa-select-fill: #e3eefc; --spa-walk: #d9534a;</span>
+<span class="sd">  }</span>
+<span class="sd">  /* :root outranks a zero-specificity :where() block, so the dark tokens key on the class */</span>
+<span class="sd">  :root.wa-dark {</span>
+<span class="sd">    --spa-surface: #15191e; --spa-surface-2: #1d232b; --spa-border: #333b45;</span>
+<span class="sd">    --spa-muted: #9aa3ad; --spa-accent: #8fb4dd; --spa-text: #d7dce2;</span>
+<span class="sd">    --spa-select-fill: #263a52; --spa-walk: #ff8a76;</span>
+<span class="sd">    color-scheme: dark;</span>
+<span class="sd">  }</span>
+<span class="sd">  body { margin: 0; min-height: 100vh; background: var(--spa-surface-2); color: var(--spa-text);</span>
+<span class="sd">    font-family: Inter, ui-sans-serif, system-ui, sans-serif; }</span>
+<span class="sd">  .page { box-sizing: border-box; max-width: 64rem; margin: 0 auto; padding: 3rem 1.25rem; }</span>
+<span class="sd">  .eyebrow { margin: 0; color: var(--spa-accent); font-size: .75rem; font-weight: 800; letter-spacing: .16em; }</span>
+<span class="sd">  h1 { margin: .35rem 0 0; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.03em; }</span>
+<span class="sd">  .lede { margin: .6rem 0 2rem; color: var(--spa-muted); font-size: 1.05rem; }</span>
+<span class="sd">  .panel { background: var(--spa-surface); border: 1px solid var(--spa-border); border-radius: 1rem;</span>
+<span class="sd">    box-shadow: 0 18px 45px rgba(15, 23, 42, .08); padding: 1.25rem; }</span>
+<span class="sd">  .panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;</span>
+<span class="sd">    flex-wrap: wrap; margin-bottom: 1rem; }</span>
+<span class="sd">  .panel-header h2 { margin: 0 0 .3rem; font-size: 1.2rem; }</span>
+<span class="sd">  .chips { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }</span>
+<span class="sd">  .status, .active-chip { display: inline-flex; align-items: center; gap: .5rem; margin: 0; font-size: .85rem; }</span>
+<span class="sd">  .status span, .active-chip span { color: var(--spa-muted); }</span>
+<span class="sd">  .status strong, .active-chip em { min-width: 3rem; min-height: 1.3rem; padding: .1rem .55rem;</span>
+<span class="sd">    border-radius: 999px; background: var(--spa-surface-2); border: 1px solid var(--spa-border);</span>
+<span class="sd">    font-style: normal; font-weight: 600; }</span>
+<span class="sd">  .active-chip em { color: var(--spa-walk); border-color: var(--spa-walk); }</span>
+<span class="sd">  .toolbar { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }</span>
+<span class="sd">  .segmented { display: inline-flex; border: 1px solid var(--spa-border); border-radius: .6rem; overflow: hidden; }</span>
+<span class="sd">  .seg { padding: .4rem .85rem; border: none; background: var(--spa-surface); color: var(--spa-muted);</span>
+<span class="sd">    font: inherit; font-size: .85rem; cursor: pointer; }</span>
+<span class="sd">  .seg + .seg { border-left: 1px solid var(--spa-border); }</span>
+<span class="sd">  .seg.active { background: var(--spa-accent); color: #fff; }</span>
+<span class="sd">  .hint { color: var(--spa-muted); font-size: .78rem; }</span>
+<span class="sd">  .dark-toggle { display: inline-flex; align-items: center; gap: .4rem; color: var(--spa-muted);</span>
+<span class="sd">    font-size: .85rem; cursor: pointer; }</span>
+<span class="sd">  .graph-panel { height: 30rem; border: 1px solid var(--spa-border); border-radius: .75rem;</span>
+<span class="sd">    background: var(--spa-surface-2); overflow: hidden; }</span>
+<span class="sd">  .graph-panel spaday-dagre { height: 100%; }</span>
+
+<span class="sd">  .ctx-menu { display: flex; flex-direction: column; min-width: 11rem; padding: .3rem;</span>
+<span class="sd">    background: var(--spa-surface); border: 1px solid var(--spa-border); border-radius: .6rem;</span>
+<span class="sd">    box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }</span>
+<span class="sd">  .ctx-menu strong { padding: .35rem .6rem .45rem; font-size: .85rem; border-bottom: 1px solid var(--spa-border); }</span>
+<span class="sd">  .ctx-menu button { text-align: left; padding: .4rem .6rem; margin-top: .15rem; border: none; border-radius: .4rem;</span>
+<span class="sd">    background: transparent; color: inherit; font: inherit; font-size: .85rem; cursor: pointer; }</span>
+<span class="sd">  .ctx-menu button:hover { background: var(--spa-surface-2); color: var(--spa-accent); }</span>
+<span class="sd">  @media (max-width: 720px) { .page { padding: 1.5rem .75rem; } .graph-panel { height: 22rem; } }</span>
+<span class="sd">&lt;/style&gt;</span>
+<span class="sd">"""</span>
+</pre></div>
+</div>
+</details></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="spaday_dagre.example.app">
@@ -369,13 +580,33 @@ the graph.</p>
             <ul>
 <li><a class="reference internal" href="#">spaday_dagre.example</a><ul>
 <li><a class="reference internal" href="#attributes">Attributes</a></li>
+<li><a class="reference internal" href="#classes">Classes</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
 <li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
+<li><a class="reference internal" href="#spaday_dagre.example.ORDER"><code class="docutils literal notranslate"><span class="pre">ORDER</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example.STEPS"><code class="docutils literal notranslate"><span class="pre">STEPS</span></code></a></li>
 <li><a class="reference internal" href="#spaday_dagre.example.GRAPH"><code class="docutils literal notranslate"><span class="pre">GRAPH</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a><ul>
+<li><a class="reference internal" href="#spaday_dagre.example.Pipeline.active"><code class="docutils literal notranslate"><span class="pre">Pipeline.active</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example.Pipeline.selected"><code class="docutils literal notranslate"><span class="pre">Pipeline.selected</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#spaday_dagre.example.pipeline"><code class="docutils literal notranslate"><span class="pre">pipeline</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example.session"><code class="docutils literal notranslate"><span class="pre">session</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example.server"><code class="docutils literal notranslate"><span class="pre">server</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example.sweep"><code class="docutils literal notranslate"><span class="pre">sweep()</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example._menu_choice"><code class="docutils literal notranslate"><span class="pre">_menu_choice</span></code></a></li>
 <li><a class="reference internal" href="#spaday_dagre.example.graph"><code class="docutils literal notranslate"><span class="pre">graph</span></code></a></li>
 <li><a class="reference internal" href="#spaday_dagre.example.menu"><code class="docutils literal notranslate"><span class="pre">menu</span></code></a></li>
-<li><a class="reference internal" href="#spaday_dagre.example.controls"><code class="docutils literal notranslate"><span class="pre">controls</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example._direction"><code class="docutils literal notranslate"><span class="pre">_direction()</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example.toolbar"><code class="docutils literal notranslate"><span class="pre">toolbar</span></code></a></li>
 <li><a class="reference internal" href="#spaday_dagre.example.status"><code class="docutils literal notranslate"><span class="pre">status</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example.active_chip"><code class="docutils literal notranslate"><span class="pre">active_chip</span></code></a></li>
 <li><a class="reference internal" href="#spaday_dagre.example.page"><code class="docutils literal notranslate"><span class="pre">page</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example._active_rule"><code class="docutils literal notranslate"><span class="pre">_active_rule()</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example._selected_edge_rule"><code class="docutils literal notranslate"><span class="pre">_selected_edge_rule()</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example._HIGHLIGHTS"><code class="docutils literal notranslate"><span class="pre">_HIGHLIGHTS</span></code></a></li>
+<li><a class="reference internal" href="#spaday_dagre.example.STYLES"><code class="docutils literal notranslate"><span class="pre">STYLES</span></code></a></li>
 <li><a class="reference internal" href="#spaday_dagre.example.app"><code class="docutils literal notranslate"><span class="pre">app</span></code></a></li>
 </ul>
 </li>
@@ -390,7 +621,7 @@ the graph.</p>
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=a58bc63e"></script>
+</div><script src="../../../_static/documentation_options.js?v=92734c54"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

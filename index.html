@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="API Reference" href="autoapi/index.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
-        <title>spaday-dagre v0.1.1</title>
+        <title>spaday-dagre v0.1.2</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
@@ -167,7 +167,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="#"><div class="brand">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.1.1</code></div></a>
+      <a href="#"><div class="brand">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.1.2</code></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -188,7 +188,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
   
-  <span class="sidebar-brand-text">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.1.1</code></span>
+  <span class="sidebar-brand-text">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.1.2</code></span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -264,7 +264,12 @@ serializable node/edge config, laid out by <a class="reference external" href="h
 drawn as light-DOM SVG. Colors ride the spaday shell’s <code class="docutils literal notranslate"><span class="pre">--spa-*</span></code> tokens, so
 <code class="docutils literal notranslate"><span class="pre">bind_root_class(&quot;wa-dark&quot;,</span> <span class="pre">...)</span></code> re-themes the graph with the rest of the page, and application CSS
 reaches every shape. <code class="docutils literal notranslate"><span class="pre">dagre-node-click</span></code> bubbles the node id (scalar <code class="docutils literal notranslate"><span class="pre">detail</span></code>, so
-<code class="docutils literal notranslate"><span class="pre">SetField(&quot;selected&quot;,</span> <span class="pre">event_value())</span></code> just works); <code class="docutils literal notranslate"><span class="pre">dagre-edge-click</span></code> bubbles <code class="docutils literal notranslate"><span class="pre">{source,</span> <span class="pre">target}</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">SetField(&quot;selected&quot;,</span> <span class="pre">event_value())</span></code> just works); <code class="docutils literal notranslate"><span class="pre">dagre-edge-click</span></code> bubbles <code class="docutils literal notranslate"><span class="pre">{source,</span> <span class="pre">target}</span></code>.
+Right-clicking a node or edge bubbles <code class="docutils literal notranslate"><span class="pre">dagre-node-contextmenu</span></code> / <code class="docutils literal notranslate"><span class="pre">dagre-edge-contextmenu</span></code> with the
+graph context plus the pointer position, pairing with spaday’s <code class="docutils literal notranslate"><span class="pre">open_popup</span></code> for context menus.</p>
+<p>Navigation is dagre-d3-class: cursor-anchored wheel zoom, drag pan (clamped so the graph can never
+be dragged out of view), double-click reset, and an optional GitHub-mermaid-style D-pad
+(<code class="docutils literal notranslate"><span class="pre">controls</span></code>) with pan arrows around a center reset circle.</p>
 </section>
 <section id="quick-example">
 <h1>Quick example<a class="headerlink" href="#quick-example" title="Link to this heading">¶</a></h1>
@@ -274,16 +279,17 @@ reaches every shape. <code class="docutils literal notranslate"><span class="pre
 
 <span class="n">graph</span> <span class="o">=</span> <span class="n">Dagre</span><span class="p">(</span>
     <span class="n">graph</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">"nodes"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"a"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Alpha"</span><span class="p">},</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"b"</span><span class="p">}],</span>
+        <span class="s2">"nodes"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"a"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Alpha"</span><span class="p">},</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">:</span> <span class="s2">"diamond"</span><span class="p">}],</span>
         <span class="s2">"edges"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"a"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"flow"</span><span class="p">}],</span>
     <span class="p">},</span>
     <span class="n">layout</span><span class="o">=</span><span class="p">{</span><span class="s2">"rankdir"</span><span class="p">:</span> <span class="s2">"LR"</span><span class="p">},</span>
+    <span class="n">controls</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">app</span> <span class="o">=</span> <span class="n">serve</span><span class="p">(</span><span class="n">element</span><span class="p">(</span><span class="s2">"main"</span><span class="p">)</span><span class="o">.</span><span class="n">child</span><span class="p">(</span><span class="n">graph</span><span class="p">),</span> <span class="n">packages</span><span class="o">=</span><span class="p">[</span><span class="n">package</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Node sizes default from label measurement; per-node <code class="docutils literal notranslate"><span class="pre">width</span></code>/<code class="docutils literal notranslate"><span class="pre">height</span></code>/<code class="docutils literal notranslate"><span class="pre">class</span></code> and per-edge
-<code class="docutils literal notranslate"><span class="pre">label</span></code>/<code class="docutils literal notranslate"><span class="pre">class</span></code> override. <code class="docutils literal notranslate"><span class="pre">layout</span></code> passes through to dagre (<code class="docutils literal notranslate"><span class="pre">rankdir</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>, <code class="docutils literal notranslate"><span class="pre">nodesep</span></code>,
+<p>Node sizes default from label measurement; per-node <code class="docutils literal notranslate"><span class="pre">width</span></code>/<code class="docutils literal notranslate"><span class="pre">height</span></code>/<code class="docutils literal notranslate"><span class="pre">class</span></code>/<code class="docutils literal notranslate"><span class="pre">shape</span></code> (<code class="docutils literal notranslate"><span class="pre">rect</span></code>,
+<code class="docutils literal notranslate"><span class="pre">diamond</span></code>, <code class="docutils literal notranslate"><span class="pre">ellipse</span></code>) and per-edge <code class="docutils literal notranslate"><span class="pre">label</span></code>/<code class="docutils literal notranslate"><span class="pre">class</span></code> override. <code class="docutils literal notranslate"><span class="pre">layout</span></code> passes through to dagre (<code class="docutils literal notranslate"><span class="pre">rankdir</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>, <code class="docutils literal notranslate"><span class="pre">nodesep</span></code>,
 <code class="docutils literal notranslate"><span class="pre">ranksep</span></code>, <code class="docutils literal notranslate"><span class="pre">edgesep</span></code>, <code class="docutils literal notranslate"><span class="pre">marginx</span></code>/<code class="docutils literal notranslate"><span class="pre">marginy</span></code>, <code class="docutils literal notranslate"><span class="pre">ranker</span></code>). Installing the package registers the <code class="docutils literal notranslate"><span class="pre">dagre</span></code>
 entry point, so <code class="docutils literal notranslate"><span class="pre">packages=[&quot;dagre&quot;]</span></code> also works.</p>
 </section>
@@ -292,8 +298,10 @@ entry point, so <code class="docutils literal notranslate"><span class="pre">pac
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>spaday_dagre.example
 </pre></div>
 </div>
-<p>Open <a class="reference external" href="http://127.0.0.1:8016">http://127.0.0.1:8016</a>: a pipeline DAG with direction switching, node selection, and the
-dark-mode toggle.</p>
+<p>Open <a class="reference external" href="http://127.0.0.1:8016">http://127.0.0.1:8016</a>: a pipeline DAG live over a transports wire — the server sweeps an
+active-stage highlight through the graph while node/edge selection rides back as model edits — with
+direction switching, mixed node shapes, a right-click menu for nodes and edges, view controls, and
+the dark-mode toggle.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This library was generated using <a class="reference external" href="https://copier.readthedocs.io/en/stable/">copier</a> from the <a class="reference external" href="https://github.com/python-project-templates/base">Base Python Project Template repository</a>.</p>
@@ -339,7 +347,7 @@ dark-mode toggle.</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=a58bc63e"></script>
+</div><script src="_static/documentation_options.js?v=92734c54"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

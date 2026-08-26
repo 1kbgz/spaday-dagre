@@ -5,9 +5,13 @@ spaday_dagre.example
 
 .. autoapi-nested-parse::
 
-   A small pipeline DAG: store-driven graph mutation, node-click status, a node
-   context menu, and the spaday page-mode theme convention (``wa-dark``) re-theming
-   the graph.
+   A pipeline-explorer showcase, live over a transports wire: the server sweeps an
+   *active* highlight from ingest through deploy — walking the nodes and the edges
+   between them — pushing each step to every client, and
+   node/edge selection rides back to the server as model edits (the same round trip
+   the other peers' examples exercise). Also on show: node shapes, a right-click
+   context menu for nodes and edges, view controls, host-driven sizing, and the
+   spaday page-mode theme convention (``wa-dark``) re-theming the whole page.
 
    Run ``python -m spaday_dagre.example`` and open http://127.0.0.1:8016.
 
@@ -18,29 +22,198 @@ Attributes
 
 .. autoapisummary::
 
+   spaday_dagre.example.ORDER
+   spaday_dagre.example.STEPS
    spaday_dagre.example.GRAPH
+   spaday_dagre.example.pipeline
+   spaday_dagre.example.session
+   spaday_dagre.example.server
+   spaday_dagre.example._menu_choice
    spaday_dagre.example.graph
    spaday_dagre.example.menu
-   spaday_dagre.example.controls
+   spaday_dagre.example.toolbar
    spaday_dagre.example.status
+   spaday_dagre.example.active_chip
    spaday_dagre.example.page
+   spaday_dagre.example._HIGHLIGHTS
+   spaday_dagre.example.STYLES
    spaday_dagre.example.app
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   spaday_dagre.example.Pipeline
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   spaday_dagre.example.sweep
+   spaday_dagre.example._direction
+   spaday_dagre.example._active_rule
+   spaday_dagre.example._selected_edge_rule
 
 
 Module Contents
 ---------------
 
+.. py:data:: ORDER
+   :value: ['ingest', 'clean', 'features', 'train', 'evaluate', 'deploy']
+
+
+.. py:data:: STEPS
+   :type:  list[str]
+   :value: []
+
+
 .. py:data:: GRAPH
+
+.. py:class:: Pipeline(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   The live model every client mirrors: the server owns ``active``; clients edit ``selected``.
+
+   Create a new model by parsing and validating input data from keyword arguments.
+
+   Raises [`ValidationError`][pydantic_core.ValidationError] if the input data cannot be
+   validated to form a valid model.
+
+   `self` is explicitly positional-only to allow `self` as a field name.
+
+
+   .. py:attribute:: active
+      :type:  str
+      :value: 'ingest'
+
+
+
+   .. py:attribute:: selected
+      :type:  str
+      :value: ''
+
+
+
+.. py:data:: pipeline
+
+.. py:data:: session
+
+.. py:data:: server
+
+.. py:function:: sweep() -> None
+   :async:
+
+
+   Walk the active highlight from ingest through deploy — nodes and the edges between
+   them — forever (server → clients).
+
+
+.. py:data:: _menu_choice
 
 .. py:data:: graph
 
 .. py:data:: menu
 
-.. py:data:: controls
+.. py:function:: _direction(label: str, rankdir: str)
+
+.. py:data:: toolbar
 
 .. py:data:: status
 
+.. py:data:: active_chip
+
 .. py:data:: page
+
+.. py:function:: _active_rule(step: str) -> str
+
+   The sweep's walk highlight: a red outline, distinct from the blue selection.
+
+
+.. py:function:: _selected_edge_rule(edge: dict) -> str
+
+   A selected edge stays highlighted; its selection key is the label, else "source → target".
+
+
+.. py:data:: _HIGHLIGHTS
+   :value: ''
+
+
+.. py:data:: STYLES
+   :value: Multiline-String
+
+   .. raw:: html
+
+      <details><summary>Show Value</summary>
+
+   .. code-block:: python
+
+      """
+      <style>
+        :root {
+          --spa-surface: #ffffff; --spa-surface-2: #f4f6f8; --spa-border: #e3e6ea;
+          --spa-muted: #5f6b76; --spa-accent: #4a90d9; --spa-text: #1c2530;
+          --spa-select-fill: #e3eefc; --spa-walk: #d9534a;
+        }
+        /* :root outranks a zero-specificity :where() block, so the dark tokens key on the class */
+        :root.wa-dark {
+          --spa-surface: #15191e; --spa-surface-2: #1d232b; --spa-border: #333b45;
+          --spa-muted: #9aa3ad; --spa-accent: #8fb4dd; --spa-text: #d7dce2;
+          --spa-select-fill: #263a52; --spa-walk: #ff8a76;
+          color-scheme: dark;
+        }
+        body { margin: 0; min-height: 100vh; background: var(--spa-surface-2); color: var(--spa-text);
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+        .page { box-sizing: border-box; max-width: 64rem; margin: 0 auto; padding: 3rem 1.25rem; }
+        .eyebrow { margin: 0; color: var(--spa-accent); font-size: .75rem; font-weight: 800; letter-spacing: .16em; }
+        h1 { margin: .35rem 0 0; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.03em; }
+        .lede { margin: .6rem 0 2rem; color: var(--spa-muted); font-size: 1.05rem; }
+        .panel { background: var(--spa-surface); border: 1px solid var(--spa-border); border-radius: 1rem;
+          box-shadow: 0 18px 45px rgba(15, 23, 42, .08); padding: 1.25rem; }
+        .panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+          flex-wrap: wrap; margin-bottom: 1rem; }
+        .panel-header h2 { margin: 0 0 .3rem; font-size: 1.2rem; }
+        .chips { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .status, .active-chip { display: inline-flex; align-items: center; gap: .5rem; margin: 0; font-size: .85rem; }
+        .status span, .active-chip span { color: var(--spa-muted); }
+        .status strong, .active-chip em { min-width: 3rem; min-height: 1.3rem; padding: .1rem .55rem;
+          border-radius: 999px; background: var(--spa-surface-2); border: 1px solid var(--spa-border);
+          font-style: normal; font-weight: 600; }
+        .active-chip em { color: var(--spa-walk); border-color: var(--spa-walk); }
+        .toolbar { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .segmented { display: inline-flex; border: 1px solid var(--spa-border); border-radius: .6rem; overflow: hidden; }
+        .seg { padding: .4rem .85rem; border: none; background: var(--spa-surface); color: var(--spa-muted);
+          font: inherit; font-size: .85rem; cursor: pointer; }
+        .seg + .seg { border-left: 1px solid var(--spa-border); }
+        .seg.active { background: var(--spa-accent); color: #fff; }
+        .hint { color: var(--spa-muted); font-size: .78rem; }
+        .dark-toggle { display: inline-flex; align-items: center; gap: .4rem; color: var(--spa-muted);
+          font-size: .85rem; cursor: pointer; }
+        .graph-panel { height: 30rem; border: 1px solid var(--spa-border); border-radius: .75rem;
+          background: var(--spa-surface-2); overflow: hidden; }
+        .graph-panel spaday-dagre { height: 100%; }
+      
+        .ctx-menu { display: flex; flex-direction: column; min-width: 11rem; padding: .3rem;
+          background: var(--spa-surface); border: 1px solid var(--spa-border); border-radius: .6rem;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
+        .ctx-menu strong { padding: .35rem .6rem .45rem; font-size: .85rem; border-bottom: 1px solid var(--spa-border); }
+        .ctx-menu button { text-align: left; padding: .4rem .6rem; margin-top: .15rem; border: none; border-radius: .4rem;
+          background: transparent; color: inherit; font: inherit; font-size: .85rem; cursor: pointer; }
+        .ctx-menu button:hover { background: var(--spa-surface-2); color: var(--spa-accent); }
+        @media (max-width: 720px) { .page { padding: 1.5rem .75rem; } .graph-panel { height: 22rem; } }
+      </style>
+      """
+
+   .. raw:: html
+
+      </details>
+
+
 
 .. py:data:: app
 
