@@ -42,6 +42,8 @@ const MIN_H = 32;
 const EDGE_SAMPLES = 24; // fixed point count so edge paths interpolate cleanly
 const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 8;
+const PAN_STEP = 60; // control-arrow pan distance, in svg user units
+const EDGE_MARGIN = 48; // minimum graph extent kept inside the window when panning/zooming
 
 let measureContext: CanvasRenderingContext2D | null = null;
 
@@ -109,6 +111,25 @@ function el<K extends keyof SVGElementTagNameMap>(
   return node;
 }
 
+// dagre routes edges to the rectangular bbox; nodes drawn as inscribed shapes need the
+// true boundary, so edge endpoints are re-clipped along the ray toward the neighbor point
+function shapeIntersect(
+  center: Point,
+  half: { w: number; h: number },
+  shape: DagreNode["shape"],
+  toward: Point,
+): Point | null {
+  const dx = toward.x - center.x;
+  const dy = toward.y - center.y;
+  if ((!dx && !dy) || !half.w || !half.h) return null;
+  let t = 0;
+  if (shape === "diamond")
+    t = 1 / (Math.abs(dx) / half.w + Math.abs(dy) / half.h);
+  else if (shape === "ellipse") t = 1 / Math.hypot(dx / half.w, dy / half.h);
+  else return null;
+  return { x: center.x + dx * t, y: center.y + dy * t };
+}
+
 function ease(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
@@ -146,12 +167,26 @@ class SpadayDagre extends HTMLElement {
   #nodeLaid = new Map<string, NodeLaid>();
   #edgeLaid = new Map<string, EdgeLaid>();
   #view = { x: 0, y: 0, k: 1 };
+  // the window is the component's own size (1 css px = 1 user unit); the graph's natural
+  // extent moves within it via the view transform
+  #window = { w: 0, h: 0 };
+  #graphSize = { w: 0, h: 0 };
+  #centered = false;
+  #controls = false;
+  #controlsEl: HTMLDivElement | null = null;
+  // tracks the host's size: the svg window and the control pad follow it
+  #resize =
+    typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => this.#syncWindow())
+      : null;
   #frame = 0;
   #dragged = false;
 
   connectedCallback(): void {
     this.style.display ||= "block";
+    this.#resize?.observe(this);
     if (!this.#rendered) this.#render();
+    else this.#syncWindow(); // rendered while disconnected: adopt the real size now
     this.addEventListener("click", (event) => {
       if (this.#dragged) return; // a pan, not a selection
       const target = event.target as Element;
@@ -229,6 +264,7 @@ class SpadayDagre extends HTMLElement {
 
   set layout(value: DagreLayoutConfig | null) {
     this.#layout = value ?? {};
+    this.#centered = false; // a new layout re-fits and re-centers the view
     this.#render();
   }
   get layout(): DagreLayoutConfig {
@@ -241,6 +277,15 @@ class SpadayDagre extends HTMLElement {
   }
   get zoomable(): boolean {
     return this.#zoomable;
+  }
+
+  /** Overlay pan arrows and a center reset control on the graph (default false). */
+  set controls(value: boolean) {
+    this.#controls = Boolean(value);
+    this.#syncControls();
+  }
+  get controls(): boolean {
+    return this.#controls;
   }
 
   /** Re-layout transition duration in ms; 0 disables (also disabled by reduced motion).
@@ -289,15 +334,140 @@ class SpadayDagre extends HTMLElement {
     this.#svg = svg;
     this.#viewport = viewport;
     this.#wireZoom(svg);
-    this.replaceChildren(svg);
+    // the frame fills the host — the component's size dictates it, and the svg scales into it
+    // (max-width/height resolve against the frame's definite size) — with the graph centered
+    const frame = document.createElement("div");
+    frame.className = "spaday-dagre-frame";
+    frame.append(svg);
+    this.replaceChildren(frame);
+    this.#syncControls();
     return { svg, viewport };
   }
 
+  // Size the svg window to the component: the graph pans across the component's full
+  // extents, not just its own natural box. An absolutely positioned frame contributes no
+  // auto height, so an unsized host defaults to the graph's natural height.
+  #syncWindow(): void {
+    const svg = this.#svg;
+    if (!svg) return;
+    // the natural-height fallback must never override an author-sized host (min-height
+    // beats height), so re-measure without it each time and reapply only if still unsized
+    if (this.style.minHeight) this.style.minHeight = "";
+    if (!this.clientHeight && this.#graphSize.h)
+      this.style.minHeight = `${this.#graphSize.h}px`;
+    const w = this.clientWidth || this.#graphSize.w;
+    const h = this.clientHeight || this.#graphSize.h;
+    if (!w || !h) return;
+    this.#window = { w, h };
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svg.setAttribute("width", String(w));
+    svg.setAttribute("height", String(h));
+    if (this.#centered) this.#applyView();
+    else if (this.#graphSize.w) {
+      this.#resetView();
+      // a fallback-sized window (rendered while disconnected) centers again once the
+      // component's real size is measurable
+      this.#centered = this.clientWidth > 0;
+    }
+    this.#placeControls();
+  }
+
   #applyView(): void {
+    // clamp the pan so at least EDGE_MARGIN of the graph stays inside the window — a drag or
+    // zoom can never strand the diagram entirely off-screen
+    const { w, h } = this.#window;
+    const { w: gw, h: gh } = this.#graphSize;
+    const k = this.#view.k;
+    if (w && h && gw && gh) {
+      const mx = Math.min(EDGE_MARGIN, w / 2, (gw * k) / 2);
+      const my = Math.min(EDGE_MARGIN, h / 2, (gh * k) / 2);
+      this.#view.x = Math.max(mx - gw * k, Math.min(this.#view.x, w - mx));
+      this.#view.y = Math.max(my - gh * k, Math.min(this.#view.y, h - my));
+    }
     this.#viewport?.setAttribute(
       "transform",
       `translate(${this.#view.x} ${this.#view.y}) scale(${this.#view.k})`,
     );
+  }
+
+  #pan(dx: number, dy: number): void {
+    this.#view.x += dx;
+    this.#view.y += dy;
+    this.#applyView();
+  }
+
+  // Fit-and-center: the whole graph visible, centered in the window (also the initial view).
+  #resetView(): void {
+    const { w, h } = this.#window;
+    const { w: gw, h: gh } = this.#graphSize;
+    const k = Math.max(MIN_ZOOM, Math.min(1, w / (gw || 1), h / (gh || 1)));
+    this.#view = { x: (w - gw * k) / 2, y: (h - gh * k) / 2, k };
+    this.#applyView();
+  }
+
+  // Optional on-graph controls (GitHub's mermaid style): a D-pad whose arrows nudge the diagram
+  // in the arrow's direction, around a center circle that resets pan/zoom.
+  #syncControls(): void {
+    if (!this.#controls || !this.#svg) {
+      this.#controlsEl?.remove();
+      this.#controlsEl = null;
+      return;
+    }
+    if (!this.#controlsEl) {
+      const pad = document.createElement("div");
+      pad.className = "spaday-dagre-controls";
+      const button = (
+        label: string,
+        title: string,
+        area: string,
+        act: () => void,
+      ) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.title = title;
+        b.textContent = label;
+        b.style.gridArea = area;
+        b.className = `spaday-dagre-control-${area}`;
+        b.addEventListener("click", act);
+        pad.append(b);
+      };
+      button("\u2191", "Pan up", "up", () => this.#pan(0, -PAN_STEP));
+      button("\u2190", "Pan left", "left", () => this.#pan(-PAN_STEP, 0));
+      button("\u25cb", "Reset view", "reset", () => this.#resetView());
+      button("\u2192", "Pan right", "right", () => this.#pan(PAN_STEP, 0));
+      button("\u2193", "Pan down", "down", () => this.#pan(0, PAN_STEP));
+      this.#controlsEl = pad;
+    }
+    const frame = this.#svg.parentElement;
+    if (frame && this.#controlsEl.parentNode !== frame)
+      frame.append(this.#controlsEl);
+    this.#placeControls();
+  }
+
+  // Beside the graph's bottom-right corner when there is room, clamped inside the frame
+  // (over the corner) when there is not. Re-run by the ResizeObserver on any host or
+  // graph size change.
+  #placeControls(): void {
+    const pad = this.#controlsEl;
+    const svg = this.#svg;
+    const frame = svg?.parentElement;
+    if (!pad || !svg || !frame) return;
+    const fr = frame.getBoundingClientRect();
+    const sr = svg.getBoundingClientRect();
+    const gap = 10;
+    const margin = 4;
+    const padW = pad.offsetWidth || 84;
+    const padH = pad.offsetHeight || 84;
+    let left = sr.right - fr.left + gap;
+    if (left + padW > fr.width - margin)
+      left = Math.max(margin, fr.width - padW - margin);
+    let top = sr.bottom - fr.top - padH;
+    top = Math.min(
+      Math.max(margin, top),
+      Math.max(margin, fr.height - padH - margin),
+    );
+    pad.style.left = `${left}px`;
+    pad.style.top = `${top}px`;
   }
 
   // client pixel -> svg user units (the svg may be shrunk by max-width: 100%)
@@ -367,8 +537,7 @@ class SpadayDagre extends HTMLElement {
     svg.addEventListener("pointercancel", stop);
     svg.addEventListener("dblclick", () => {
       if (!this.#zoomable) return;
-      this.#view = { x: 0, y: 0, k: 1 };
-      this.#applyView();
+      this.#resetView();
     });
   }
 
@@ -428,6 +597,7 @@ class SpadayDagre extends HTMLElement {
         height: (node.height ?? MIN_H + PAD_Y) * inflate,
       });
     }
+    const shapeById = new Map(nodes.map((node) => [node.id, node.shape]));
     const edgeKey = (edge: DagreEdge) => `${edge.source} ${edge.target}`;
     for (const edge of edges) {
       const sized = edge.label
@@ -441,12 +611,10 @@ class SpadayDagre extends HTMLElement {
     }
     dagre.layout(g);
 
-    const { svg, viewport } = this.#ensureSvg();
+    const { viewport } = this.#ensureSvg();
     const { width = 0, height = 0 } = g.graph();
-    svg.setAttribute("viewBox", `0 0 ${Math.ceil(width)} ${Math.ceil(height)}`);
-    svg.setAttribute("width", String(Math.ceil(width)));
-    svg.setAttribute("height", String(Math.ceil(height)));
-    this.#applyView();
+    this.#graphSize = { w: Math.ceil(width), h: Math.ceil(height) };
+    this.#syncWindow();
 
     cancelAnimationFrame(this.#frame);
     const duration = this.#duration();
@@ -461,8 +629,24 @@ class SpadayDagre extends HTMLElement {
       const laid = g.edge(edge.source, edge.target, key);
       if (!laid) continue;
       seenEdges.add(key);
+      const pts = [...(laid.points ?? [])];
+      const clip = (id: string, end: number, ref: number) => {
+        const shape = shapeById.get(id);
+        if (shape !== "diamond" && shape !== "ellipse") return;
+        const n = g.node(id);
+        if (!n || pts.length < 2) return;
+        const hit = shapeIntersect(
+          { x: n.x, y: n.y },
+          { w: n.width / 2, h: n.height / 2 },
+          shape,
+          pts[ref],
+        );
+        if (hit) pts[end] = hit;
+      };
+      clip(edge.source, 0, 1);
+      clip(edge.target, pts.length - 1, pts.length - 2);
       const target: EdgeLaid = {
-        points: resample(laid.points ?? [], EDGE_SAMPLES),
+        points: resample(pts, EDGE_SAMPLES),
         label:
           edge.label && laid.x !== undefined && laid.y !== undefined
             ? { x: laid.x, y: laid.y }

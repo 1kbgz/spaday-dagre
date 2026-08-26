@@ -40,6 +40,13 @@ class SpadayDagre(Component):
                 description="Wheel zoom (cursor-anchored), drag pan, and double-click reset; on by default.",
             ),
             PropertySchema(
+                name="controls",
+                kind="boolean",
+                choices=(),
+                default=None,
+                description="Overlay pan arrows and a center reset control on the graph; off by default.",
+            ),
+            PropertySchema(
                 name="transition",
                 kind="number",
                 choices=(),
@@ -58,6 +65,7 @@ class SpadayDagre(Component):
         graph: Any = None,
         layout: Any = None,
         zoomable: bool | None = None,
+        controls: bool | None = None,
         transition: float | None = None,
         **props: Any,
     ) -> None:
@@ -68,6 +76,7 @@ class SpadayDagre(Component):
                 "graph": graph,
                 "layout": layout,
                 "zoomable": zoomable,
+                "controls": controls,
                 "transition": transition,
             },
             **props,

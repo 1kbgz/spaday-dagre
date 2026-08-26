@@ -20,6 +20,12 @@ drawn as light-DOM SVG. Colors ride the spaday shell's `--spa-*` tokens, so
 `bind_root_class("wa-dark", ...)` re-themes the graph with the rest of the page, and application CSS
 reaches every shape. `dagre-node-click` bubbles the node id (scalar `detail`, so
 `SetField("selected", event_value())` just works); `dagre-edge-click` bubbles `{source, target}`.
+Right-clicking a node or edge bubbles `dagre-node-contextmenu` / `dagre-edge-contextmenu` with the
+graph context plus the pointer position, pairing with spaday's `open_popup` for context menus.
+
+Navigation is dagre-d3-class: cursor-anchored wheel zoom, drag pan (clamped so the graph can never
+be dragged out of view), double-click reset, and an optional GitHub-mermaid-style D-pad
+(`controls`) with pan arrows around a center reset circle.
 
 ## Quick example
 
@@ -30,16 +36,17 @@ from spaday_dagre import Dagre, package
 
 graph = Dagre(
     graph={
-        "nodes": [{"id": "a", "label": "Alpha"}, {"id": "b"}],
+        "nodes": [{"id": "a", "label": "Alpha"}, {"id": "b", "shape": "diamond"}],
         "edges": [{"source": "a", "target": "b", "label": "flow"}],
     },
     layout={"rankdir": "LR"},
+    controls=True,
 )
 app = serve(element("main").child(graph), packages=[package])
 ```
 
-Node sizes default from label measurement; per-node `width`/`height`/`class` and per-edge
-`label`/`class` override. `layout` passes through to dagre (`rankdir`, `align`, `nodesep`,
+Node sizes default from label measurement; per-node `width`/`height`/`class`/`shape` (`rect`,
+`diamond`, `ellipse`) and per-edge `label`/`class` override. `layout` passes through to dagre (`rankdir`, `align`, `nodesep`,
 `ranksep`, `edgesep`, `marginx`/`marginy`, `ranker`). Installing the package registers the `dagre`
 entry point, so `packages=["dagre"]` also works.
 
@@ -49,8 +56,10 @@ entry point, so `packages=["dagre"]` also works.
 python -m spaday_dagre.example
 ```
 
-Open <http://127.0.0.1:8016>: a pipeline DAG with direction switching, node selection, and the
-dark-mode toggle.
+Open <http://127.0.0.1:8016>: a pipeline DAG live over a transports wire — the server sweeps an
+active-stage highlight through the graph while node/edge selection rides back as model edits — with
+direction switching, mixed node shapes, a right-click menu for nodes and edges, view controls, and
+the dark-mode toggle.
 
 > [!NOTE]
 > This library was generated using [copier](https://copier.readthedocs.io/en/stable/) from the [Base Python Project Template repository](https://github.com/python-project-templates/base).

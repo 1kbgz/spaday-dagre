@@ -33,6 +33,13 @@
               "description": "Wheel zoom (cursor-anchored), drag pan, and double-click reset; on by default."
             },
             {
+              "name": "controls",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Overlay pan arrows and a center reset control on the graph; off by default."
+            },
+            {
               "name": "transition",
               "type": {
                 "text": "number"

@@ -167,6 +167,7 @@ test("zooms at the cursor, pans by drag, resets on double-click", async ({
     };
     document.body.appendChild(graph);
     const svg = graph.querySelector("svg");
+    const initial = graph.view; // fit-and-centered on mount
     const clicks = [];
     graph.addEventListener("dagre-node-click", (e) => clicks.push(e.detail));
     const rect = svg.getBoundingClientRect();
@@ -205,12 +206,12 @@ test("zooms at the cursor, pans by drag, resets on double-click", async ({
       .querySelector('[data-node-id="a"] rect')
       .dispatchEvent(new MouseEvent("click", { bubbles: true }));
     svg.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
-    return { zoomed, panned, reset: graph.view, clicks };
+    return { initial, zoomed, panned, reset: graph.view, clicks };
   });
   expect(r.zoomed.k).toBeGreaterThan(1); // wheel-up zooms in
   expect(r.panned.x).not.toBe(r.zoomed.x); // drag panned the viewport
   expect(r.clicks).toEqual([]); // pan suppressed the click
-  expect(r.reset).toEqual({ x: 0, y: 0, k: 1 }); // double-click resets
+  expect(r.reset).toEqual(r.initial); // double-click restores the fit-and-centered view
 });
 
 test("re-layout animates while preserving element identity", async ({
@@ -355,7 +356,7 @@ test("the example's node context menu opens at the pointer with graph context", 
   await expect(node).toBeVisible();
   await node.click({ button: "right" });
 
-  const menu = page.locator("#node-menu");
+  const menu = page.locator("#graph-menu");
   await expect(menu).toBeVisible();
   await expect(menu.locator("strong")).toHaveText("evaluate"); // captured context drives the items
   const nodeBox = await node.boundingBox();
@@ -371,4 +372,309 @@ test("the example's node context menu opens at the pointer with graph context", 
   await expect(menu).toBeVisible();
   await page.locator("h1").click();
   await expect(menu).toBeHidden();
+
+  // edges get the same menu, labeled by the edge context
+  await page.evaluate(() => {
+    const hit = document.querySelector(
+      'spaday-dagre [data-edge-label="rows"] .spaday-dagre-edge-hit',
+    );
+    const box = hit.getBoundingClientRect();
+    hit.dispatchEvent(
+      new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        clientX: box.x + box.width / 2,
+        clientY: box.y + box.height / 2,
+      }),
+    );
+  });
+  await expect(menu).toBeVisible();
+  await expect(menu.locator("strong")).toHaveText("rows"); // labeled edges show their label
+  await menu.getByRole("button", { name: "Select", exact: true }).click();
+  await expect(page.locator(".status strong")).toHaveText("rows"); // the edge's label round-trips
+  await expect(menu).toBeHidden();
+  // and the selected edge stays highlighted (blue selection, distinct from the red walk)
+  await expect
+    .poll(() =>
+      page
+        .locator(
+          'spaday-dagre [data-edge-label="rows"] .spaday-dagre-edge-line',
+        )
+        .evaluate((el) => getComputedStyle(el).stroke),
+    )
+    .toBe("rgb(74, 144, 217)");
+});
+
+test("the example is live over the wire: pushed highlights and echoed selection", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:8016");
+  const graph = page.locator("spaday-dagre");
+  // the server sweeps the active stage through the pipeline (server -> client push)
+  await expect(graph).toHaveAttribute("data-active", /./);
+  const first = await graph.getAttribute("data-active");
+  await expect
+    .poll(() => graph.getAttribute("data-active"), { timeout: 5000 })
+    .not.toBe(first);
+  // a node click rides to the server and the echoed model drives the selection attribute
+  await page.locator('spaday-dagre [data-node-id="clean"] rect').click();
+  await expect(graph).toHaveAttribute("data-selected", "clean");
+  await expect(page.locator(".status strong")).toHaveText("clean");
+
+  // the two highlight layers stack and diff: while the walk visits the selected node the
+  // stroke turns red over the blue selection fill; when it moves on, the stroke falls back
+  const styleAt = (active) =>
+    page.evaluate((value) => {
+      const el = document.querySelector("spaday-dagre");
+      el.setAttribute("data-active", value); // deterministic: bypass the sweep's timing
+      const rect = el.querySelector('[data-node-id="clean"] rect');
+      const cs = getComputedStyle(rect);
+      return { fill: cs.fill, stroke: cs.stroke };
+    }, active);
+  const visited = await styleAt("clean");
+  expect(visited.fill).toBe("rgb(227, 238, 252)"); // selection keeps the inside blue
+  expect(visited.stroke).toBe("rgb(217, 83, 74)"); // the walk borrows the outline in red
+  const departed = await styleAt("ingest");
+  expect(departed.fill).toBe("rgb(227, 238, 252)");
+  expect(departed.stroke).toBe("rgb(74, 144, 217)"); // and hands it back to the selection
+});
+
+test("panning is clamped so the graph cannot be dragged out of view", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+    };
+    graph.style.cssText = "width:600px;height:400px";
+    document.body.appendChild(graph);
+    const svg = graph.querySelector("svg");
+    const viewport = graph.querySelector(".spaday-dagre-viewport");
+    const rect = svg.getBoundingClientRect();
+    // how much of the graph remains visible inside the window
+    const visible = () => {
+      const v = viewport.getBoundingClientRect();
+      const s = svg.getBoundingClientRect();
+      return {
+        w: Math.min(v.right, s.right) - Math.max(v.left, s.left),
+        h: Math.min(v.bottom, s.bottom) - Math.max(v.top, s.top),
+      };
+    };
+    const down = (x, y) =>
+      svg.dispatchEvent(
+        new PointerEvent("pointerdown", {
+          bubbles: true,
+          clientX: rect.left + x,
+          clientY: rect.top + y,
+          button: 0,
+          pointerId: 1,
+        }),
+      );
+    const move = (x, y) =>
+      svg.dispatchEvent(
+        new PointerEvent("pointermove", {
+          bubbles: true,
+          clientX: rect.left + x,
+          clientY: rect.top + y,
+          pointerId: 1,
+        }),
+      );
+    const up = () =>
+      svg.dispatchEvent(new PointerEvent("pointerup", { pointerId: 1 }));
+    // drag hard toward the bottom-right: without clamping the graph leaves the window
+    down(5, 5);
+    move(rect.width * 40, rect.height * 40);
+    up();
+    const dragged = visible();
+    // and hard toward the top-left
+    down(5, 5);
+    move(-rect.width * 40, -rect.height * 40);
+    up();
+    return { dragged, opposite: visible() };
+  });
+  // after arbitrarily hard drags, a usable chunk of the graph is still inside the window
+  expect(r.dragged.w).toBeGreaterThan(20);
+  expect(r.dragged.h).toBeGreaterThan(20);
+  expect(r.opposite.w).toBeGreaterThan(20);
+  expect(r.opposite.h).toBeGreaterThan(20);
+});
+
+test("optional controls pan the diagram and reset the view", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    // sized so two 60px pans stay inside the clamp bounds
+    graph.graph = {
+      nodes: [
+        { id: "a", width: 200, height: 200 },
+        { id: "b", width: 200, height: 200 },
+      ],
+      edges: [{ source: "a", target: "b" }],
+    };
+    graph.style.cssText = "width:800px;height:600px";
+    document.body.appendChild(graph);
+    const initial = graph.view; // fit-and-centered on mount
+    const before = !!graph.querySelector(".spaday-dagre-controls");
+    graph.controls = true;
+    const pad = graph.querySelector(".spaday-dagre-controls");
+    pad.querySelector('[title="Pan right"]').click();
+    pad.querySelector('[title="Pan down"]').click();
+    const panned = { ...graph.view };
+    pad.querySelector('[title="Reset view"]').click();
+    const reset = { ...graph.view };
+    const padRect = pad.getBoundingClientRect();
+    const frameRect = graph
+      .querySelector(".spaday-dagre-frame")
+      .getBoundingClientRect();
+    graph.controls = false;
+    return {
+      initial,
+      before,
+      buttons: pad.querySelectorAll("button").length,
+      // the pad sits inside the window's bottom-right corner
+      inWindow:
+        padRect.right <= frameRect.right &&
+        padRect.bottom <= frameRect.bottom &&
+        padRect.left > frameRect.left + frameRect.width / 2,
+      panned,
+      reset,
+      removed: !graph.querySelector(".spaday-dagre-controls"),
+    };
+  });
+  expect(r.before).toBe(false); // opt-in
+  expect(r.buttons).toBe(5);
+  expect(r.inWindow).toBe(true);
+  // arrows nudge by a step from the centered initial view
+  expect(r.panned).toEqual({ x: r.initial.x + 60, y: r.initial.y + 60, k: 1 });
+  expect(r.reset).toEqual(r.initial); // the center circle restores fit-and-center
+  expect(r.removed).toBe(true);
+});
+
+test("the frame tracks the host's size, including dynamic resize", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(async () => {
+    const graph = document.createElement("spaday-dagre");
+    graph.style.cssText = "width:600px;height:400px";
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+    };
+    document.body.appendChild(graph);
+    const frame = graph.querySelector(".spaday-dagre-frame");
+    const svg = graph.querySelector("svg");
+    const at = () => ({
+      frame: frame.getBoundingClientRect(),
+      host: graph.getBoundingClientRect(),
+      svg: svg.getBoundingClientRect(),
+    });
+    const sized = at();
+    graph.controls = true;
+    graph.style.cssText = "width:300px;height:150px"; // shrink: CSS scales, the observer re-places the pad
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const resized = at();
+    const pad = graph
+      .querySelector(".spaday-dagre-controls")
+      .getBoundingClientRect();
+    return { sized, resized, pad };
+  });
+  // the host dictates the frame, before and after resize
+  expect(r.sized.frame.width).toBeCloseTo(r.sized.host.width, 0);
+  expect(r.sized.frame.height).toBeCloseTo(r.sized.host.height, 0);
+  expect(r.resized.frame.width).toBeCloseTo(r.resized.host.width, 0);
+  expect(r.resized.frame.height).toBeCloseTo(r.resized.host.height, 0);
+  // the svg window fills the frame edge to edge, before and after resize
+  expect(r.sized.svg.left).toBeCloseTo(r.sized.frame.left, 0);
+  expect(r.sized.svg.width).toBeCloseTo(r.sized.frame.width, 0);
+  expect(r.resized.svg.height).toBeCloseTo(r.resized.frame.height, 0);
+  // the observer kept the control pad inside the shrunken frame
+  expect(r.pad.right).toBeLessThanOrEqual(r.resized.frame.right + 1);
+  expect(r.pad.bottom).toBeLessThanOrEqual(r.resized.frame.bottom + 1);
+});
+
+test("switching layout direction re-fits and re-centers the view", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.style.cssText = "width:700px;height:500px";
+    graph.transition = 0;
+    graph.controls = true;
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      edges: [
+        { source: "a", target: "b" },
+        { source: "a", target: "c" },
+      ],
+    };
+    document.body.appendChild(graph);
+    const pad = graph.querySelector(".spaday-dagre-controls");
+    pad.querySelector('[title="Pan right"]').click(); // wander off-center
+    pad.querySelector('[title="Pan down"]').click();
+    graph.layout = { rankdir: "LR" };
+    const after = { ...graph.view };
+    graph.querySelector("svg").dispatchEvent(new MouseEvent("dblclick"));
+    return { after, reset: { ...graph.view } };
+  });
+  expect(r.after).toEqual(r.reset); // the switch landed exactly on the fit-and-centered view
+});
+
+test("edges meet diamond and ellipse boundaries instead of the layout bbox", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.graph = {
+      nodes: [
+        { id: "a" },
+        { id: "b", shape: "diamond" },
+        { id: "c", shape: "ellipse" },
+      ],
+      edges: [
+        { source: "a", target: "b" },
+        { source: "b", target: "c" },
+      ],
+    };
+    document.body.appendChild(graph);
+    const shape = (id, tag) => {
+      const el = graph.querySelector(`[data-node-id="${id}"] ${tag}`);
+      const box = el.getBBox();
+      return {
+        cx: box.x + box.width / 2,
+        cy: box.y + box.height / 2,
+        hw: box.width / 2,
+        hh: box.height / 2,
+      };
+    };
+    const endOf = (source, target) => {
+      const d = graph
+        .querySelector(
+          `[data-edge-source="${source}"][data-edge-target="${target}"] .spaday-dagre-edge-line`,
+        )
+        .getAttribute("d");
+      const nums = d.match(/-?[\d.]+/g).map(Number);
+      return { x: nums[nums.length - 2], y: nums[nums.length - 1] };
+    };
+    const b = shape("b", "polygon");
+    const c = shape("c", "ellipse");
+    const intoB = endOf("a", "b");
+    const intoC = endOf("b", "c");
+    return {
+      // diamond metric: |dx|/hw + |dy|/hh == 1 exactly on the boundary
+      diamond:
+        Math.abs(intoB.x - b.cx) / b.hw + Math.abs(intoB.y - b.cy) / b.hh,
+      // ellipse metric: (dx/hw)^2 + (dy/hh)^2 == 1 exactly on the boundary
+      ellipse: ((intoC.x - c.cx) / c.hw) ** 2 + ((intoC.y - c.cy) / c.hh) ** 2,
+    };
+  });
+  expect(Math.abs(r.diamond - 1)).toBeLessThan(0.05);
+  expect(Math.abs(r.ellipse - 1)).toBeLessThan(0.05);
 });
