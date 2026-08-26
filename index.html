@@ -263,10 +263,10 @@
 serializable node/edge config, laid out by <a class="reference external" href="https://github.com/dagrejs/dagre">&#64;dagrejs/dagre</a> and
 drawn as light-DOM SVG. Colors ride the spaday shell’s <code class="docutils literal notranslate"><span class="pre">--spa-*</span></code> tokens, so
 <code class="docutils literal notranslate"><span class="pre">bind_root_class(&quot;wa-dark&quot;,</span> <span class="pre">...)</span></code> re-themes the graph with the rest of the page, and application CSS
-reaches every shape. <code class="docutils literal notranslate"><span class="pre">dagre-node-click</span></code> bubbles the node id (scalar <code class="docutils literal notranslate"><span class="pre">detail</span></code>, so
-<code class="docutils literal notranslate"><span class="pre">SetField(&quot;selected&quot;,</span> <span class="pre">event_value())</span></code> just works); <code class="docutils literal notranslate"><span class="pre">dagre-edge-click</span></code> bubbles <code class="docutils literal notranslate"><span class="pre">{source,</span> <span class="pre">target}</span></code>.
-Right-clicking a node or edge bubbles <code class="docutils literal notranslate"><span class="pre">dagre-node-contextmenu</span></code> / <code class="docutils literal notranslate"><span class="pre">dagre-edge-contextmenu</span></code> with the
-graph context plus the pointer position, pairing with spaday’s <code class="docutils literal notranslate"><span class="pre">open_popup</span></code> for context menus.</p>
+reaches every shape. <code class="docutils literal notranslate"><span class="pre">dagre-node-click</span></code> bubbles <code class="docutils literal notranslate"><span class="pre">{id,</span> <span class="pre">label,</span> <span class="pre">x,</span> <span class="pre">y}</span></code> and <code class="docutils literal notranslate"><span class="pre">dagre-edge-click</span></code> bubbles
+<code class="docutils literal notranslate"><span class="pre">{source,</span> <span class="pre">target,</span> <span class="pre">label,</span> <span class="pre">x,</span> <span class="pre">y}</span></code> — the graph context plus the pointer position — so
+<code class="docutils literal notranslate"><span class="pre">SetField(&quot;selected&quot;,</span> <span class="pre">event_value(&quot;id&quot;))</span></code> selects and <code class="docutils literal notranslate"><span class="pre">open_popup(...,</span> <span class="pre">x=event_value(&quot;x&quot;),</span> <span class="pre">y=event_value(&quot;y&quot;))</span></code> positions. Right-clicking a node or edge bubbles <code class="docutils literal notranslate"><span class="pre">dagre-node-contextmenu</span></code> /
+<code class="docutils literal notranslate"><span class="pre">dagre-edge-contextmenu</span></code> with the same shape, pairing with spaday’s <code class="docutils literal notranslate"><span class="pre">open_popup</span></code> for context menus.</p>
 <p>Navigation is dagre-d3-class: cursor-anchored wheel zoom, drag pan (clamped so the graph can never
 be dragged out of view), double-click reset, and an optional GitHub-mermaid-style D-pad
 (<code class="docutils literal notranslate"><span class="pre">controls</span></code>) with pan arrows around a center reset circle.</p>
@@ -289,9 +289,49 @@ be dragged out of view), double-click reset, and an optional GitHub-mermaid-styl
 </pre></div>
 </div>
 <p>Node sizes default from label measurement; per-node <code class="docutils literal notranslate"><span class="pre">width</span></code>/<code class="docutils literal notranslate"><span class="pre">height</span></code>/<code class="docutils literal notranslate"><span class="pre">class</span></code>/<code class="docutils literal notranslate"><span class="pre">shape</span></code> (<code class="docutils literal notranslate"><span class="pre">rect</span></code>,
-<code class="docutils literal notranslate"><span class="pre">diamond</span></code>, <code class="docutils literal notranslate"><span class="pre">ellipse</span></code>) and per-edge <code class="docutils literal notranslate"><span class="pre">label</span></code>/<code class="docutils literal notranslate"><span class="pre">class</span></code> override. <code class="docutils literal notranslate"><span class="pre">layout</span></code> passes through to dagre (<code class="docutils literal notranslate"><span class="pre">rankdir</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>, <code class="docutils literal notranslate"><span class="pre">nodesep</span></code>,
+<code class="docutils literal notranslate"><span class="pre">diamond</span></code>, <code class="docutils literal notranslate"><span class="pre">ellipse</span></code>) and per-edge <code class="docutils literal notranslate"><span class="pre">label</span></code>/<code class="docutils literal notranslate"><span class="pre">class</span></code> override. The <code class="docutils literal notranslate"><span class="pre">maxLabelWidth</span></code> prop (px) caps
+label-driven width: wider labels are ellipsized, with the full label as a native tooltip. <code class="docutils literal notranslate"><span class="pre">layout</span></code>
+passes through to dagre (<code class="docutils literal notranslate"><span class="pre">rankdir</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>, <code class="docutils literal notranslate"><span class="pre">nodesep</span></code>,
 <code class="docutils literal notranslate"><span class="pre">ranksep</span></code>, <code class="docutils literal notranslate"><span class="pre">edgesep</span></code>, <code class="docutils literal notranslate"><span class="pre">marginx</span></code>/<code class="docutils literal notranslate"><span class="pre">marginy</span></code>, <code class="docutils literal notranslate"><span class="pre">ranker</span></code>). Installing the package registers the <code class="docutils literal notranslate"><span class="pre">dagre</span></code>
 entry point, so <code class="docutils literal notranslate"><span class="pre">packages=[&quot;dagre&quot;]</span></code> also works.</p>
+</section>
+<section id="theming">
+<h1>Theming<a class="headerlink" href="#theming" title="Link to this heading">¶</a></h1>
+<p>Component-scoped tokens layer over the shell’s <code class="docutils literal notranslate"><span class="pre">--spa-*</span></code> tokens, so an application can theme the
+graph from the host (or any ancestor) without knowing its internals — a token set once wins in both
+light and dark page modes:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Token</p></th>
+<th class="head"><p>Themes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-node-fill</span></code></p></td>
+<td><p>node shape fill</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-node-stroke</span></code></p></td>
+<td><p>node shape outline</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-node-text</span></code></p></td>
+<td><p>node label text</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-edge-stroke</span></code></p></td>
+<td><p>edge lines and arrowheads</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-edge-label</span></code></p></td>
+<td><p>edge label text</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-accent</span></code></p></td>
+<td><p>hover, connected-endpoint, and <code class="docutils literal notranslate"><span class="pre">emphasis</span></code> affordances</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Node and edge <code class="docutils literal notranslate"><span class="pre">class</span></code> values are forwarded onto the rendered <code class="docutils literal notranslate"><span class="pre">&lt;g&gt;</span></code> groups (alongside
+<code class="docutils literal notranslate"><span class="pre">spaday-dagre-node</span></code> / <code class="docutils literal notranslate"><span class="pre">spaday-dagre-edge</span></code>), so custom classes are CSS-targetable directly. One
+variant is built in: a node or edge whose <code class="docutils literal notranslate"><span class="pre">class</span></code> includes <code class="docutils literal notranslate"><span class="pre">emphasis</span></code> gets an accent outline.</p>
 </section>
 <section id="run-the-local-example">
 <h1>Run the local example<a class="headerlink" href="#run-the-local-example" title="Link to this heading">¶</a></h1>

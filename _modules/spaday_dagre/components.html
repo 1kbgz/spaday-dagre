@@ -295,6 +295,13 @@
                 <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">description</span><span class="o">=</span><span class="s2">"Re-layout transition duration in milliseconds (default 250); 0 disables, and reduced-motion preferences disable it automatically."</span><span class="p">,</span>
             <span class="p">),</span>
+            <span class="n">PropertySchema</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"maxLabelWidth"</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"number"</span><span class="p">,</span>
+                <span class="n">choices</span><span class="o">=</span><span class="p">(),</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">"Cap on a node label's measured width in px: wider labels stop widening the node and render ellipsized, with the full label as a native tooltip. Unset keeps natural widths."</span><span class="p">,</span>
+            <span class="p">),</span>
         <span class="p">),</span>
         <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="s2">"dagre-node-click"</span><span class="p">,</span> <span class="s2">"dagre-edge-click"</span><span class="p">),</span>
         <span class="n">slots</span><span class="o">=</span><span class="p">(),</span>
@@ -309,6 +316,7 @@
         <span class="n">zoomable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">controls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">transition</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">maxLabelWidth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">props</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
@@ -320,6 +328,7 @@
                 <span class="s2">"zoomable"</span><span class="p">:</span> <span class="n">zoomable</span><span class="p">,</span>
                 <span class="s2">"controls"</span><span class="p">:</span> <span class="n">controls</span><span class="p">,</span>
                 <span class="s2">"transition"</span><span class="p">:</span> <span class="n">transition</span><span class="p">,</span>
+                <span class="s2">"maxLabelWidth"</span><span class="p">:</span> <span class="n">maxLabelWidth</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="o">**</span><span class="n">props</span><span class="p">,</span>
         <span class="p">)</span></div>
