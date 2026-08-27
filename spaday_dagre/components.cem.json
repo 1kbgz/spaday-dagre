@@ -58,16 +58,30 @@
             {
               "name": "dagre-node-click",
               "type": {
-                "text": "CustomEvent"
+                "text": "CustomEvent<{id: string, label: string, x: number, y: number}>"
               },
               "description": "A node was clicked; detail carries {id, label, x, y} with the pointer's client coordinates."
             },
             {
               "name": "dagre-edge-click",
               "type": {
-                "text": "CustomEvent"
+                "text": "CustomEvent<{source: string, target: string, label?: string, x: number, y: number}>"
               },
               "description": "An edge was clicked; detail carries {source, target, label, x, y} with the pointer's client coordinates."
+            },
+            {
+              "name": "dagre-node-contextmenu",
+              "type": {
+                "text": "CustomEvent<{id: string, x: number, y: number}>"
+              },
+              "description": "A node was right-clicked; detail carries {id, x, y} with the pointer's client coordinates, and the native context menu is suppressed over the shape."
+            },
+            {
+              "name": "dagre-edge-contextmenu",
+              "type": {
+                "text": "CustomEvent<{source: string, target: string, label?: string, x: number, y: number}>"
+              },
+              "description": "An edge was right-clicked; detail carries {source, target, label, x, y} with the pointer's client coordinates, and the native context menu is suppressed over the shape."
             }
           ],
           "slots": []
