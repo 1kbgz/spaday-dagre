@@ -16,7 +16,7 @@
               "type": {
                 "text": "unknown"
               },
-              "description": "The graph: {nodes: [{id, label, width, height, class}], edges: [{source, target, label, class}]}."
+              "description": "The graph: {nodes: [{id, label, width, height, class, shape, parent}], edges: [{source, target, label, class}]}. A node's `parent` nests it inside that id's cluster (compound layout)."
             },
             {
               "name": "layout",
@@ -52,6 +52,39 @@
                 "text": "number"
               },
               "description": "Cap on a node label's measured width in px: wider labels stop widening the node and render ellipsized, with the full label as a native tooltip. Unset keeps natural widths."
+            },
+            {
+              "name": "emphasis",
+              "type": {
+                "text": "unknown"
+              },
+              "description": "Node ids wearing the `.emphasis` class (a single id string is accepted; null clears). Toggled by class reconciliation on the rendered nodes — no re-layout, the graph prop is untouched — and re-applied after re-renders."
+            },
+            {
+              "name": "focus",
+              "type": {
+                "text": "string"
+              },
+              "description": "Bindable spelling of focusNode(): setting a node id pans/zooms it to the window center. The focusNode() method is the primary API."
+            }
+          ],
+          "methods": [
+            {
+              "name": "focusNode",
+              "description": "Pan (and zoom to a comfortable level when needed) so the node — or cluster — `id` is centered in the window; made for spaday's Invoke action.",
+              "parameters": [
+                {
+                  "name": "id",
+                  "type": {
+                    "text": "string"
+                  }
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
             }
           ],
           "events": [

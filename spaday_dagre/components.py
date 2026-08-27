@@ -23,7 +23,7 @@ class SpadayDagre(Component):
                 kind="json",
                 choices=(),
                 default=None,
-                description="The graph: {nodes: [{id, label, width, height, class}], edges: [{source, target, label, class}]}.",
+                description="The graph: {nodes: [{id, label, width, height, class, shape, parent}], edges: [{source, target, label, class}]}. A node's `parent` nests it inside that id's cluster (compound layout).",
             ),
             PropertySchema(
                 name="layout",
@@ -60,6 +60,20 @@ class SpadayDagre(Component):
                 default=None,
                 description="Cap on a node label's measured width in px: wider labels stop widening the node and render ellipsized, with the full label as a native tooltip. Unset keeps natural widths.",
             ),
+            PropertySchema(
+                name="emphasis",
+                kind="json",
+                choices=(),
+                default=None,
+                description="Node ids wearing the `.emphasis` class (a single id string is accepted; null clears). Toggled by class reconciliation on the rendered nodes — no re-layout, the graph prop is untouched — and re-applied after re-renders.",
+            ),
+            PropertySchema(
+                name="focus",
+                kind="string",
+                choices=(),
+                default=None,
+                description="Bindable spelling of focusNode(): setting a node id pans/zooms it to the window center. The focusNode() method is the primary API.",
+            ),
         ),
         events=("dagre-node-click", "dagre-edge-click", "dagre-node-contextmenu", "dagre-edge-contextmenu"),
         slots=(),
@@ -75,6 +89,8 @@ class SpadayDagre(Component):
         controls: bool | None = None,
         transition: float | None = None,
         maxLabelWidth: float | None = None,
+        emphasis: Any = None,
+        focus: str | None = None,
         **props: Any,
     ) -> None:
         super().__init__(
@@ -87,6 +103,8 @@ class SpadayDagre(Component):
                 "controls": controls,
                 "transition": transition,
                 "maxLabelWidth": maxLabelWidth,
+                "emphasis": emphasis,
+                "focus": focus,
             },
             **props,
         )
