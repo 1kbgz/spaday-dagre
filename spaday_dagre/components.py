@@ -61,7 +61,7 @@ class SpadayDagre(Component):
                 description="Cap on a node label's measured width in px: wider labels stop widening the node and render ellipsized, with the full label as a native tooltip. Unset keeps natural widths.",
             ),
         ),
-        events=("dagre-node-click", "dagre-edge-click"),
+        events=("dagre-node-click", "dagre-edge-click", "dagre-node-contextmenu", "dagre-edge-contextmenu"),
         slots=(),
     )
 
