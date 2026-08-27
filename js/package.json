@@ -1,6 +1,6 @@
 {
   "name": "spaday-dagre",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "dagre graph rendering for spaday",
   "repository": "git@github.com:1kbgz/spaday-dagre.git",
   "author": "1kbgz <dev@1kbgz.com>",
