@@ -265,7 +265,7 @@
                 <span class="n">kind</span><span class="o">=</span><span class="s2">"json"</span><span class="p">,</span>
                 <span class="n">choices</span><span class="o">=</span><span class="p">(),</span>
                 <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">description</span><span class="o">=</span><span class="s2">"The graph: {nodes: [{id, label, width, height, class}], edges: [{source, target, label, class}]}."</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">"The graph: {nodes: [{id, label, width, height, class, shape, parent}], edges: [{source, target, label, class}]}. A node's `parent` nests it inside that id's cluster (compound layout)."</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="n">PropertySchema</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="s2">"layout"</span><span class="p">,</span>
@@ -302,6 +302,20 @@
                 <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">description</span><span class="o">=</span><span class="s2">"Cap on a node label's measured width in px: wider labels stop widening the node and render ellipsized, with the full label as a native tooltip. Unset keeps natural widths."</span><span class="p">,</span>
             <span class="p">),</span>
+            <span class="n">PropertySchema</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"emphasis"</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"json"</span><span class="p">,</span>
+                <span class="n">choices</span><span class="o">=</span><span class="p">(),</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">"Node ids wearing the `.emphasis` class (a single id string is accepted; null clears). Toggled by class reconciliation on the rendered nodes — no re-layout, the graph prop is untouched — and re-applied after re-renders."</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">PropertySchema</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"focus"</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"string"</span><span class="p">,</span>
+                <span class="n">choices</span><span class="o">=</span><span class="p">(),</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">"Bindable spelling of focusNode(): setting a node id pans/zooms it to the window center. The focusNode() method is the primary API."</span><span class="p">,</span>
+            <span class="p">),</span>
         <span class="p">),</span>
         <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="s2">"dagre-node-click"</span><span class="p">,</span> <span class="s2">"dagre-edge-click"</span><span class="p">,</span> <span class="s2">"dagre-node-contextmenu"</span><span class="p">,</span> <span class="s2">"dagre-edge-contextmenu"</span><span class="p">),</span>
         <span class="n">slots</span><span class="o">=</span><span class="p">(),</span>
@@ -317,6 +331,8 @@
         <span class="n">controls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">transition</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">maxLabelWidth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">emphasis</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">focus</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">props</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
@@ -329,6 +345,8 @@
                 <span class="s2">"controls"</span><span class="p">:</span> <span class="n">controls</span><span class="p">,</span>
                 <span class="s2">"transition"</span><span class="p">:</span> <span class="n">transition</span><span class="p">,</span>
                 <span class="s2">"maxLabelWidth"</span><span class="p">:</span> <span class="n">maxLabelWidth</span><span class="p">,</span>
+                <span class="s2">"emphasis"</span><span class="p">:</span> <span class="n">emphasis</span><span class="p">,</span>
+                <span class="s2">"focus"</span><span class="p">:</span> <span class="n">focus</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="o">**</span><span class="n">props</span><span class="p">,</span>
         <span class="p">)</span></div>

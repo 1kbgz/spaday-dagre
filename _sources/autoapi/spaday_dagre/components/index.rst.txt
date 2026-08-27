@@ -15,7 +15,7 @@ Classes
 Module Contents
 ---------------
 
-.. py:class:: SpadayDagre(*children: spaday.component.Child, key: str | None = None, graph: Any = None, layout: Any = None, zoomable: bool | None = None, controls: bool | None = None, transition: float | None = None, maxLabelWidth: float | None = None, **props: Any)
+.. py:class:: SpadayDagre(*children: spaday.component.Child, key: str | None = None, graph: Any = None, layout: Any = None, zoomable: bool | None = None, controls: bool | None = None, transition: float | None = None, maxLabelWidth: float | None = None, emphasis: Any = None, focus: str | None = None, **props: Any)
 
    Bases: :py:obj:`spaday.component.Component`
 

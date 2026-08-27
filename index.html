@@ -294,6 +294,18 @@ label-driven width: wider labels are ellipsized, with the full label as a native
 passes through to dagre (<code class="docutils literal notranslate"><span class="pre">rankdir</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>, <code class="docutils literal notranslate"><span class="pre">nodesep</span></code>,
 <code class="docutils literal notranslate"><span class="pre">ranksep</span></code>, <code class="docutils literal notranslate"><span class="pre">edgesep</span></code>, <code class="docutils literal notranslate"><span class="pre">marginx</span></code>/<code class="docutils literal notranslate"><span class="pre">marginy</span></code>, <code class="docutils literal notranslate"><span class="pre">ranker</span></code>). Installing the package registers the <code class="docutils literal notranslate"><span class="pre">dagre</span></code>
 entry point, so <code class="docutils literal notranslate"><span class="pre">packages=[&quot;dagre&quot;]</span></code> also works.</p>
+<p>A node with <code class="docutils literal notranslate"><span class="pre">parent</span></code> nests inside the cluster named by another node’s id (dagre’s compound
+layout): the cluster renders as a rounded container behind its children, labeled along its top
+edge, and clicks/right-clicks on it dispatch the node events with the same detail shape.
+Parentless nodes mix freely with clustered ones; graphs without parents keep the flat layout
+path.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">emphasis</span></code> prop (a list of node ids; a single id string works too, null clears) toggles the
+<code class="docutils literal notranslate"><span class="pre">.emphasis</span></code> class on the matching rendered nodes by pure class reconciliation — no re-layout, no
+<code class="docutils literal notranslate"><span class="pre">graph</span></code> rebuild — and re-applies after re-renders, so a live selection binds directly:
+<code class="docutils literal notranslate"><span class="pre">.bind(&quot;emphasis&quot;,</span> <span class="pre">&quot;selected&quot;)</span></code>. The <code class="docutils literal notranslate"><span class="pre">focusNode(id)</span></code> method (declared in the
+manifest for spaday’s <code class="docutils literal notranslate"><span class="pre">Invoke</span></code>) pans — and zooms to a comfortable level when needed — so the node
+or cluster is centered in the view; the bindable <code class="docutils literal notranslate"><span class="pre">focus</span></code> prop is a property spelling that calls
+it on set, with the method as the primary API.</p>
 </section>
 <section id="theming">
 <h1>Theming<a class="headerlink" href="#theming" title="Link to this heading">¶</a></h1>
@@ -315,13 +327,19 @@ light and dark page modes:</p>
 <td><p>node shape outline</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-node-text</span></code></p></td>
-<td><p>node label text</p></td>
+<td><p>node and cluster label text</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-edge-stroke</span></code></p></td>
 <td><p>edge lines and arrowheads</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-edge-label</span></code></p></td>
 <td><p>edge label text</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-cluster-fill</span></code></p></td>
+<td><p>cluster container fill</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-cluster-stroke</span></code></p></td>
+<td><p>cluster container outline</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--dagre-accent</span></code></p></td>
 <td><p>hover, connected-endpoint, and <code class="docutils literal notranslate"><span class="pre">emphasis</span></code> affordances</p></td>
@@ -340,8 +358,9 @@ variant is built in: a node or edge whose <code class="docutils literal notransl
 </div>
 <p>Open <a class="reference external" href="http://127.0.0.1:8016">http://127.0.0.1:8016</a>: a pipeline DAG live over a transports wire — the server sweeps an
 active-stage highlight through the graph while node/edge selection rides back as model edits — with
-direction switching, mixed node shapes, a right-click menu for nodes and edges, view controls, and
-the dark-mode toggle.</p>
+direction switching, mixed node shapes, a “modeling” cluster grouping the middle stages, selection
+mirrored into the <code class="docutils literal notranslate"><span class="pre">emphasis</span></code> prop, a right-click menu for nodes and edges (its Focus item centers
+via <code class="docutils literal notranslate"><span class="pre">focusNode</span></code>), view controls, and the dark-mode toggle.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This library was generated using <a class="reference external" href="https://copier.readthedocs.io/en/stable/">copier</a> from the <a class="reference external" href="https://github.com/python-project-templates/base">Base Python Project Template repository</a>.</p>
