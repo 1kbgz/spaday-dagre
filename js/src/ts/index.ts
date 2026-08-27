@@ -7,6 +7,8 @@ export interface DagreNode {
   height?: number;
   class?: string;
   shape?: "rect" | "diamond" | "ellipse";
+  /** Nest this node inside the cluster named by another node's id (compound layout). */
+  parent?: string;
 }
 
 export interface DagreEdge {
@@ -172,13 +174,18 @@ class SpadayDagre extends HTMLElement {
   #zoomable = true;
   #transition = 250;
   #maxLabelWidth: number | null = null;
+  #emphasis: string[] = [];
+  #focus: string | null = null;
   #rendered = false;
   #svg: SVGSVGElement | null = null;
   #viewport: SVGGElement | null = null;
+  #clusterLayer: SVGGElement | null = null;
   #nodeEls = new Map<string, SVGGElement>();
   #edgeEls = new Map<string, SVGGElement>();
+  #clusterEls = new Map<string, SVGGElement>();
   #nodeLaid = new Map<string, NodeLaid>();
   #edgeLaid = new Map<string, EdgeLaid>();
+  #clusterLaid = new Map<string, NodeLaid>();
   #view = { x: 0, y: 0, k: 1 };
   // the window is the component's own size (1 css px = 1 user unit); the graph's natural
   // extent moves within it via the view transform
@@ -305,6 +312,75 @@ class SpadayDagre extends HTMLElement {
     return this.#controls;
   }
 
+  /** Node ids wearing the `.emphasis` class (a single id string is accepted; null clears).
+   * Toggled by class reconciliation against the rendered node groups — no re-layout, and
+   * the `graph` prop is untouched — and re-applied after every render so it survives
+   * graph/layout changes. A node whose config `class` includes "emphasis" keeps it. */
+  set emphasis(value: string[] | string | null) {
+    this.#emphasis =
+      value == null
+        ? []
+        : Array.isArray(value)
+          ? value.map(String)
+          : [String(value)];
+    this.#applyEmphasis();
+  }
+  get emphasis(): string[] {
+    return this.#emphasis;
+  }
+
+  /** Bindable spelling of `focusNode`: setting a node id pans/zooms it to the window
+   * center. `focusNode(id)` is the primary API; this property just calls it on set.
+   * Defined imperatively because it deliberately shadows `HTMLElement.focus()` (the graph
+   * never takes keyboard focus), which TypeScript rejects as an accessor override. */
+  static {
+    Object.defineProperty(SpadayDagre.prototype, "focus", {
+      configurable: true,
+      get(this: SpadayDagre): string | null {
+        return this.#focus;
+      },
+      set(this: SpadayDagre, value: string | null) {
+        this.#focus = value || null;
+        if (this.#focus) this.focusNode(this.#focus);
+      },
+    });
+  }
+
+  /** Pan — and, when the current zoom is below 1:1 or the node overflows the window, zoom
+   * to a comfortable level — so the node (or cluster) `id` is centered in the window. */
+  focusNode(id: string): void {
+    const laid = this.#nodeLaid.get(id) ?? this.#clusterLaid.get(id);
+    const { w, h } = this.#window;
+    if (!laid || !w || !h) return;
+    // comfortable zoom: keep the current level when it is already >= 1:1 and the node
+    // fits; clamp up to 1 when zoomed further out, down to fitting when zoomed too far in
+    const fit = Math.min(
+      w / (laid.width + EDGE_MARGIN),
+      h / (laid.height + EDGE_MARGIN),
+    );
+    const k = Math.min(
+      Math.max(this.#view.k, 1),
+      Math.max(fit, MIN_ZOOM),
+      MAX_ZOOM,
+    );
+    this.#view = { x: w / 2 - laid.x * k, y: h / 2 - laid.y * k, k };
+    this.#applyView();
+  }
+
+  // pure class reconciliation: no layout, no render, no touching the `graph` prop
+  #applyEmphasis(): void {
+    const ids = new Set(this.#emphasis);
+    // config-driven emphasis (a node class containing "emphasis") is never stripped
+    const own = new Set(
+      (this.#graph.nodes ?? [])
+        .filter((node) => (node.class ?? "").split(/\s+/).includes("emphasis"))
+        .map((node) => node.id),
+    );
+    for (const [id, group] of this.#nodeEls) {
+      group.classList.toggle("emphasis", ids.has(id) || own.has(id));
+    }
+  }
+
   /** Cap on a node label's measured width in px: wider labels stop widening the node and
    * render ellipsized, with the full label as a native tooltip. Unset keeps natural widths. */
   set maxLabelWidth(value: number | null) {
@@ -357,9 +433,14 @@ class SpadayDagre extends HTMLElement {
     marker.append(el("path", { d: "M 0 0 L 10 5 L 0 10 z" }));
     defs.append(marker);
     const viewport = el("g", { class: "spaday-dagre-viewport" });
+    // clusters live in a layer that stays the viewport's first child, so they always
+    // paint behind the edge and node groups appended after it
+    const clusters = el("g", { class: "spaday-dagre-clusters" });
+    viewport.append(clusters);
     svg.append(defs, viewport);
     this.#svg = svg;
     this.#viewport = viewport;
+    this.#clusterLayer = clusters;
     this.#wireZoom(svg);
     // the frame fills the host — the component's size dictates it, and the svg scales into it
     // (max-width/height resolve against the frame's definite size) — with the graph centered
@@ -593,6 +674,20 @@ class SpadayDagre extends HTMLElement {
     text.setAttribute("y", String(y));
   }
 
+  #clusterShape(group: SVGGElement, laid: NodeLaid): void {
+    const rect = group.querySelector("rect");
+    const text = group.querySelector("text");
+    if (!rect || !text) return;
+    const { x, y, width: w, height: h } = laid;
+    rect.setAttribute("x", String(x - w / 2));
+    rect.setAttribute("y", String(y - h / 2));
+    rect.setAttribute("width", String(w));
+    rect.setAttribute("height", String(h));
+    // the label sits centered along the cluster's top edge
+    text.setAttribute("x", String(x));
+    text.setAttribute("y", String(y - h / 2 + 6));
+  }
+
   #edgeShape(group: SVGGElement, laid: EdgeLaid): void {
     for (const path of group.querySelectorAll("path")) {
       path.setAttribute("d", edgePath(laid.points));
@@ -609,11 +704,21 @@ class SpadayDagre extends HTMLElement {
     this.#rendered = true;
     const nodes = this.#graph.nodes ?? [];
     const edges = this.#graph.edges ?? [];
-    const g = new dagre.graphlib.Graph({ multigraph: true });
+    // ids referenced as a `parent` are clusters: dagre computes their geometry during
+    // compound layout, and they render as rounded containers behind their children.
+    // Graphs without parents keep the flat, non-compound path exactly as before.
+    const clusterIds = new Set(
+      nodes
+        .map((node) => node.parent)
+        .filter((parent): parent is string => parent != null),
+    );
+    const compound = clusterIds.size > 0;
+    const g = new dagre.graphlib.Graph({ multigraph: true, compound });
     g.setGraph({ marginx: 8, marginy: 8, ...this.#layout });
     g.setDefaultEdgeLabel(() => ({}));
     const cap = this.#maxLabelWidth;
     for (const node of nodes) {
+      if (clusterIds.has(node.id)) continue; // a cluster: dagre sizes it during layout
       const label = node.label ?? node.id;
       const measured = measure(label, NODE_FONT);
       // Diamonds inflate by sqrt(2) per axis (as in dagre-d3) so the label box
@@ -628,6 +733,14 @@ class SpadayDagre extends HTMLElement {
             )) * inflate,
         height: (node.height ?? MIN_H + PAD_Y) * inflate,
       });
+    }
+    if (compound) {
+      for (const id of clusterIds) {
+        if (!g.hasNode(id)) g.setNode(id, {});
+      }
+      for (const node of nodes) {
+        if (node.parent != null) g.setParent(node.id, node.parent);
+      }
     }
     const shapeById = new Map(nodes.map((node) => [node.id, node.shape]));
     const edgeKey = (edge: DagreEdge) => `${edge.source} ${edge.target}`;
@@ -757,6 +870,7 @@ class SpadayDagre extends HTMLElement {
     }
 
     for (const node of nodes) {
+      if (clusterIds.has(node.id)) continue; // drawn by the cluster pass below
       const laid = g.node(node.id);
       if (!laid) continue;
       seenNodes.add(node.id);
@@ -827,10 +941,78 @@ class SpadayDagre extends HTMLElement {
       }
     }
 
+    // Cluster pass: keyed like nodes (stable identity in #clusterEls), geometry straight
+    // from dagre's compound layout, ordered outermost-first so nesting stacks correctly.
+    const nextClusterLaid = new Map<string, NodeLaid>();
+    const seenClusters = new Set<string>();
+    const layer = this.#clusterLayer;
+    const depth = (id: string): number => {
+      let d = 0;
+      for (let p = g.parent(id); p != null; p = g.parent(p)) d++;
+      return d;
+    };
+    const clusterOrder = compound
+      ? [...clusterIds].sort((a, b) => depth(a) - depth(b))
+      : [];
+    for (const id of clusterOrder) {
+      const laid = g.node(id);
+      if (!laid || !layer) continue;
+      seenClusters.add(id);
+      const target: NodeLaid = {
+        x: laid.x,
+        y: laid.y,
+        width: laid.width,
+        height: laid.height,
+      };
+      nextClusterLaid.set(id, target);
+      const config = nodes.find((node) => node.id === id);
+      let group = this.#clusterEls.get(id);
+      if (!group) {
+        // data-node-id makes clusters click/contextmenu targets with the node detail shape
+        group = el("g", { "data-node-id": id });
+        group.append(
+          el("rect", { rx: "8" }),
+          el("text", {
+            "text-anchor": "middle",
+            "dominant-baseline": "hanging",
+          }),
+        );
+        this.#clusterEls.set(id, group);
+        this.#clusterShape(group, target);
+      }
+      layer.append(group); // (re)append in outer-first order: parents behind children
+      group.setAttribute(
+        "class",
+        `spaday-dagre-cluster ${config?.class ?? ""}`.trim(),
+      );
+      const text = group.querySelector("text");
+      if (text) text.textContent = config?.label ?? id;
+      const from = this.#clusterLaid.get(id);
+      if (!from || !duration) {
+        this.#clusterShape(group, target);
+      } else {
+        const grp = group;
+        steps.push((t) => {
+          this.#clusterShape(grp, {
+            x: from.x + (target.x - from.x) * t,
+            y: from.y + (target.y - from.y) * t,
+            width: from.width + (target.width - from.width) * t,
+            height: from.height + (target.height - from.height) * t,
+          });
+        });
+      }
+    }
+
     for (const [id, group] of this.#nodeEls) {
       if (!seenNodes.has(id)) {
         group.remove();
         this.#nodeEls.delete(id);
+      }
+    }
+    for (const [id, group] of this.#clusterEls) {
+      if (!seenClusters.has(id)) {
+        group.remove();
+        this.#clusterEls.delete(id);
       }
     }
     for (const [key, group] of this.#edgeEls) {
@@ -841,6 +1023,8 @@ class SpadayDagre extends HTMLElement {
     }
     this.#nodeLaid = nextNodeLaid;
     this.#edgeLaid = nextEdgeLaid;
+    this.#clusterLaid = nextClusterLaid;
+    this.#applyEmphasis(); // re-applied so emphasis survives graph/layout changes
 
     if (steps.length && duration) {
       const start = performance.now();

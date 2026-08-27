@@ -144,6 +144,10 @@ test("runs the Python example: click selects, dark mode re-themes", async ({
   await expect(node).toBeVisible();
   await node.click();
   await expect(page.locator(".status strong")).toHaveText("train");
+  // the emphasis prop mirrors the live selection: the clicked node wears the class
+  await expect(page.locator('spaday-dagre [data-node-id="train"]')).toHaveClass(
+    /emphasis/,
+  );
   // a labeled edge lands its label in the store via event_value("label")
   await page
     .locator('spaday-dagre [data-edge-label="rows"] .spaday-dagre-edge-label')
@@ -456,6 +460,48 @@ test("the example is live over the wire: pushed highlights and echoed selection"
   expect(departed.stroke).toBe("rgb(74, 144, 217)"); // and hands it back to the selection
 });
 
+test("the example clusters the modeling stages and focuses from the menu", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:8016");
+  const cluster = page.locator("spaday-dagre .spaday-dagre-cluster");
+  await expect(cluster).toBeVisible();
+  await expect(cluster.locator("text")).toHaveText("Modeling");
+  // the labeled container encloses exactly the modeling stages
+  const box = await cluster.locator("rect").boundingBox();
+  for (const id of ["features", "train", "evaluate"]) {
+    const stage = await page
+      .locator(`spaday-dagre [data-node-id="${id}"]`)
+      .boundingBox();
+    expect(stage.x).toBeGreaterThanOrEqual(box.x);
+    expect(stage.x + stage.width).toBeLessThanOrEqual(box.x + box.width);
+    expect(stage.y).toBeGreaterThanOrEqual(box.y);
+    expect(stage.y + stage.height).toBeLessThanOrEqual(box.y + box.height);
+  }
+  const ingest = await page
+    .locator('spaday-dagre [data-node-id="ingest"]')
+    .boundingBox();
+  expect(ingest.y + ingest.height).toBeLessThanOrEqual(box.y); // outside, above
+
+  // the context menu's Focus item drives the focusNode method: deploy ends up centered
+  const node = page.locator('spaday-dagre [data-node-id="deploy"]');
+  await node.locator("ellipse").click({ button: "right" });
+  const menu = page.locator("#graph-menu");
+  await expect(menu).toBeVisible();
+  await menu.getByRole("button", { name: "Focus" }).click();
+  await expect(menu).toBeHidden();
+  await expect
+    .poll(async () => {
+      const host = await page.locator("spaday-dagre").boundingBox();
+      const focused = await node.boundingBox();
+      return Math.max(
+        Math.abs(focused.x + focused.width / 2 - (host.x + host.width / 2)),
+        Math.abs(focused.y + focused.height / 2 - (host.y + host.height / 2)),
+      );
+    })
+    .toBeLessThan(5);
+});
+
 test("panning is clamped so the graph cannot be dragged out of view", async ({
   page,
 }) => {
@@ -727,6 +773,228 @@ test("consumer --dagre-* tokens re-theme both modes; emphasis wears the accent",
   expect(r.themedDark).toBe("rgb(10, 20, 30)"); // ...and wins in dark mode too
   expect(r.emphasis.stroke).toBe("rgb(200, 50, 100)"); // config class "emphasis" is forwarded
   expect(r.emphasis.width).toBe("2.5px"); // and outlined with the accent
+});
+
+test("emphasis toggles node classes without re-layout and survives re-renders", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.transition = 0;
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }, { id: "c", class: "emphasis note" }],
+      edges: [{ source: "a", target: "b" }],
+    };
+    document.body.appendChild(graph);
+    const group = (id) => graph.querySelector(`[data-node-id="${id}"]`);
+    const emphasized = () =>
+      [...graph.querySelectorAll(".spaday-dagre-node.emphasis")]
+        .map((n) => n.getAttribute("data-node-id"))
+        .sort();
+    const before = { x: group("a").querySelector("rect").getAttribute("x") };
+    group("a").dataset.identity = "kept"; // survives only if no rebuild happens
+    graph.emphasis = ["a", "missing"];
+    const set = {
+      emphasized: emphasized(),
+      identity: group("a").dataset.identity,
+      // pure class reconciliation: no re-layout, and the graph prop is untouched
+      samePlace:
+        group("a").querySelector("rect").getAttribute("x") === before.x,
+      graphUntouched: graph.graph.nodes[0].class === undefined,
+    };
+    graph.emphasis = "b"; // a single id string is accepted as [id]
+    const single = emphasized();
+    graph.layout = { rankdir: "LR" }; // a full re-render must not drop the emphasis
+    const afterRender = emphasized();
+    graph.emphasis = null; // null clears; config-class emphasis stays
+    return { set, single, afterRender, cleared: emphasized() };
+  });
+  expect(r.set.emphasized).toEqual(["a", "c"]); // "c" keeps its config-class emphasis
+  expect(r.set.identity).toBe("kept");
+  expect(r.set.samePlace).toBe(true);
+  expect(r.set.graphUntouched).toBe(true);
+  expect(r.single).toEqual(["b", "c"]);
+  expect(r.afterRender).toEqual(["b", "c"]);
+  expect(r.cleared).toEqual(["c"]);
+});
+
+test("focusNode centers a node in the window; the focus property does the same", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.transition = 0;
+    graph.style.cssText = "width:320px;height:220px"; // small host: fit zoom < 1
+    graph.graph = {
+      nodes: ["a", "b", "c", "d", "e", "f"].map((id) => ({ id })),
+      edges: ["ab", "bc", "cd", "de", "ef"].map(([s, t]) => ({
+        source: s,
+        target: t,
+      })),
+    };
+    document.body.appendChild(graph);
+    const host = graph.getBoundingClientRect();
+    const center = {
+      x: host.left + host.width / 2,
+      y: host.top + host.height / 2,
+    };
+    const offset = (id) => {
+      const box = graph
+        .querySelector(`[data-node-id="${id}"] rect`)
+        .getBoundingClientRect();
+      return {
+        dx: Math.abs(box.x + box.width / 2 - center.x),
+        dy: Math.abs(box.y + box.height / 2 - center.y),
+      };
+    };
+    const before = offset("f"); // the chain's last node starts far from center
+    graph.focusNode("f");
+    const method = { at: offset("f"), k: graph.view.k };
+    graph.focus = "a"; // the bindable spelling routes through focusNode
+    return {
+      fitK: graph.view.k,
+      before,
+      method,
+      prop: offset("a"),
+      focus: graph.focus,
+    };
+  });
+  expect(r.before.dy).toBeGreaterThan(20); // genuinely off-center to start
+  expect(r.method.at.dx).toBeLessThan(2); // centered by the method...
+  expect(r.method.at.dy).toBeLessThan(2);
+  expect(r.method.k).toBe(1); // zoomed up from the small fit to a comfortable 1:1
+  expect(r.prop.dx).toBeLessThan(2); // ...and by the property
+  expect(r.prop.dy).toBeLessThan(2);
+  expect(r.focus).toBe("a");
+});
+
+test("compound graphs draw labeled clusters behind and around their children", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.transition = 0;
+    graph.graph = {
+      nodes: [
+        { id: "a" },
+        { id: "grp", label: "Group", class: "ring" },
+        { id: "b", parent: "grp" },
+        { id: "c", parent: "grp" },
+        { id: "d" }, // parentless nodes mix freely with clustered ones
+      ],
+      edges: [
+        { source: "a", target: "b" },
+        { source: "b", target: "c" },
+        { source: "c", target: "d" },
+      ],
+    };
+    document.body.appendChild(graph);
+    const cluster = graph.querySelector(".spaday-dagre-cluster");
+    const rect = (el) => el.getBoundingClientRect();
+    const clusterBox = rect(cluster.querySelector("rect"));
+    const encloses = (id) => {
+      const box = rect(graph.querySelector(`[data-node-id="${id}"] rect`));
+      return (
+        box.left >= clusterBox.left &&
+        box.right <= clusterBox.right &&
+        box.top >= clusterBox.top &&
+        box.bottom <= clusterBox.bottom
+      );
+    };
+    const events = [];
+    graph.addEventListener("dagre-node-click", (e) => events.push(e.detail));
+    graph.addEventListener("dagre-node-contextmenu", (e) =>
+      events.push(e.detail),
+    );
+    cluster.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, clientX: 7, clientY: 9 }),
+    );
+    cluster.dispatchEvent(
+      new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        clientX: 7,
+        clientY: 9,
+      }),
+    );
+    const clustered = {
+      count: graph.querySelectorAll(".spaday-dagre-cluster").length,
+      label: cluster.querySelector("text").textContent,
+      classes: cluster.getAttribute("class"),
+      notANode: !graph.querySelector('.spaday-dagre-node[data-node-id="grp"]'),
+      enclosesB: encloses("b"),
+      enclosesC: encloses("c"),
+      outsideD: !encloses("d"),
+      // behind: the cluster paints before (below) its children in document order
+      behind: !!(
+        cluster.compareDocumentPosition(
+          graph.querySelector('[data-node-id="b"]'),
+        ) & Node.DOCUMENT_POSITION_FOLLOWING
+      ),
+      events,
+    };
+    // un-parenting reconciles the cluster away and grp becomes an ordinary node
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "grp", label: "Group" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+    };
+    return {
+      clustered,
+      flat: {
+        clusters: graph.querySelectorAll(".spaday-dagre-cluster").length,
+        grpIsNode: !!graph.querySelector(
+          '.spaday-dagre-node[data-node-id="grp"]',
+        ),
+        nodes: graph.querySelectorAll(".spaday-dagre-node").length,
+      },
+    };
+  });
+  expect(r.clustered.count).toBe(1);
+  expect(r.clustered.label).toBe("Group");
+  expect(r.clustered.classes).toBe("spaday-dagre-cluster ring"); // config class forwarded
+  expect(r.clustered.notANode).toBe(true);
+  expect(r.clustered.enclosesB).toBe(true);
+  expect(r.clustered.enclosesC).toBe(true);
+  expect(r.clustered.outsideD).toBe(true);
+  expect(r.clustered.behind).toBe(true);
+  // clusters dispatch like nodes: same events, same detail shape
+  expect(r.clustered.events[0]).toEqual({
+    id: "grp",
+    label: "Group",
+    x: 7,
+    y: 9,
+  });
+  expect(r.clustered.events[1]).toEqual({ id: "grp", x: 7, y: 9 });
+  expect(r.flat).toEqual({ clusters: 0, grpIsNode: true, nodes: 3 });
+});
+
+test("flat graphs stay on the non-compound path", async ({ page }) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.transition = 0;
+    graph.graph = {
+      nodes: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      edges: [
+        { source: "a", target: "b" },
+        { source: "a", target: "c" },
+      ],
+    };
+    document.body.appendChild(graph);
+    return {
+      clusters: graph.querySelectorAll(".spaday-dagre-cluster").length,
+      layerEmpty: graph.querySelector(".spaday-dagre-clusters").children.length,
+      nodes: graph.querySelectorAll(".spaday-dagre-node").length,
+      edges: graph.querySelectorAll(".spaday-dagre-edge").length,
+    };
+  });
+  expect(r.clusters).toBe(0);
+  expect(r.layerEmpty).toBe(0);
+  expect(r.nodes).toBe(3);
+  expect(r.edges).toBe(2);
 });
 
 test("maxLabelWidth caps node width and ellipsizes with a full-label tooltip", async ({

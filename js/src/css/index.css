@@ -110,6 +110,45 @@ spaday-dagre .spaday-dagre-arrow path {
   fill: context-stroke;
 }
 
+/* compound clusters (`parent` on node configs): rounded containers drawn behind their
+ * children, labeled along the top edge; --dagre-cluster-* tokens theme them like the
+ * node/edge tokens above */
+spaday-dagre .spaday-dagre-cluster {
+  cursor: pointer;
+}
+
+spaday-dagre .spaday-dagre-cluster rect {
+  fill: var(--dagre-cluster-fill, var(--spa-surface, #fff));
+  stroke: var(--dagre-cluster-stroke, var(--spa-border, #d0d0d0));
+  stroke-width: 1;
+}
+
+spaday-dagre .spaday-dagre-cluster text {
+  fill: var(--dagre-node-text, var(--spa-muted, #666));
+  font:
+    11px system-ui,
+    sans-serif;
+  pointer-events: none;
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-cluster rect {
+  fill: var(--dagre-cluster-fill, #1a2028);
+  stroke: var(--dagre-cluster-stroke, #333b45);
+}
+
+:where(.wa-dark) spaday-dagre .spaday-dagre-cluster text {
+  fill: var(--dagre-node-text, #aab3bd);
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-cluster rect {
+  fill: var(--dagre-cluster-fill, var(--spa-surface, #fff));
+  stroke: var(--dagre-cluster-stroke, var(--spa-border, #d0d0d0));
+}
+
+:where(.wa-light) spaday-dagre .spaday-dagre-cluster text {
+  fill: var(--dagre-node-text, var(--spa-muted, #666));
+}
+
 spaday-dagre .spaday-dagre-edge-hit {
   fill: none;
   stroke: transparent;

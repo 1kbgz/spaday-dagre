@@ -52,20 +52,36 @@ passes through to dagre (`rankdir`, `align`, `nodesep`,
 `ranksep`, `edgesep`, `marginx`/`marginy`, `ranker`). Installing the package registers the `dagre`
 entry point, so `packages=["dagre"]` also works.
 
+A node with `parent` nests inside the cluster named by another node's id (dagre's compound
+layout): the cluster renders as a rounded container behind its children, labeled along its top
+edge, and clicks/right-clicks on it dispatch the node events with the same detail shape.
+Parentless nodes mix freely with clustered ones; graphs without parents keep the flat layout
+path.
+
+The `emphasis` prop (a list of node ids; a single id string works too, null clears) toggles the
+`.emphasis` class on the matching rendered nodes by pure class reconciliation — no re-layout, no
+`graph` rebuild — and re-applies after re-renders, so a live selection binds directly:
+`.bind("emphasis", "selected")`. The `focusNode(id)` method (declared in the
+manifest for spaday's `Invoke`) pans — and zooms to a comfortable level when needed — so the node
+or cluster is centered in the view; the bindable `focus` prop is a property spelling that calls
+it on set, with the method as the primary API.
+
 ## Theming
 
 Component-scoped tokens layer over the shell's `--spa-*` tokens, so an application can theme the
 graph from the host (or any ancestor) without knowing its internals — a token set once wins in both
 light and dark page modes:
 
-| Token                 | Themes                                                |
-| --------------------- | ----------------------------------------------------- |
-| `--dagre-node-fill`   | node shape fill                                       |
-| `--dagre-node-stroke` | node shape outline                                    |
-| `--dagre-node-text`   | node label text                                       |
-| `--dagre-edge-stroke` | edge lines and arrowheads                             |
-| `--dagre-edge-label`  | edge label text                                       |
-| `--dagre-accent`      | hover, connected-endpoint, and `emphasis` affordances |
+| Token                    | Themes                                                |
+| ------------------------ | ----------------------------------------------------- |
+| `--dagre-node-fill`      | node shape fill                                       |
+| `--dagre-node-stroke`    | node shape outline                                    |
+| `--dagre-node-text`      | node and cluster label text                           |
+| `--dagre-edge-stroke`    | edge lines and arrowheads                             |
+| `--dagre-edge-label`     | edge label text                                       |
+| `--dagre-cluster-fill`   | cluster container fill                                |
+| `--dagre-cluster-stroke` | cluster container outline                             |
+| `--dagre-accent`         | hover, connected-endpoint, and `emphasis` affordances |
 
 Node and edge `class` values are forwarded onto the rendered `<g>` groups (alongside
 `spaday-dagre-node` / `spaday-dagre-edge`), so custom classes are CSS-targetable directly. One
@@ -79,8 +95,9 @@ python -m spaday_dagre.example
 
 Open <http://127.0.0.1:8016>: a pipeline DAG live over a transports wire — the server sweeps an
 active-stage highlight through the graph while node/edge selection rides back as model edits — with
-direction switching, mixed node shapes, a right-click menu for nodes and edges, view controls, and
-the dark-mode toggle.
+direction switching, mixed node shapes, a "modeling" cluster grouping the middle stages, selection
+mirrored into the `emphasis` prop, a right-click menu for nodes and edges (its Focus item centers
+via `focusNode`), view controls, and the dark-mode toggle.
 
 > [!NOTE]
 > This library was generated using [copier](https://copier.readthedocs.io/en/stable/) from the [Base Python Project Template repository](https://github.com/python-project-templates/base).

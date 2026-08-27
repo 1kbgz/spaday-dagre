@@ -2,8 +2,10 @@
 *active* highlight from ingest through deploy — walking the nodes and the edges
 between them — pushing each step to every client, and
 node/edge selection rides back to the server as model edits (the same round trip
-the other peers' examples exercise). Also on show: node shapes, a right-click
-context menu for nodes and edges, view controls, host-driven sizing, and the
+the other peers' examples exercise). Also on show: node shapes, a compound
+"modeling" cluster grouping the middle stages, the ``emphasis`` prop mirroring the
+live selection, a right-click context menu for nodes and edges (with a Focus item
+driving the ``focusNode`` method), view controls, host-driven sizing, and the
 spaday page-mode theme convention (``wa-dark``) re-theming the whole page.
 
 Run ``python -m spaday_dagre.example`` and open http://127.0.0.1:8016.
@@ -13,7 +15,7 @@ import asyncio
 
 import transports
 from pydantic import BaseModel
-from spaday import SendPatch, Sequence, SetField, Wire, by_id, close_popup, concat, cond, element, eq, event_value, field, obj, open_popup
+from spaday import Invoke, SendPatch, Sequence, SetField, Wire, by_id, close_popup, concat, cond, element, eq, event_value, field, obj, open_popup
 from spaday.backends.starlette import serve
 from spaday.components.shell import Popup
 from starlette.routing import WebSocketRoute
@@ -33,9 +35,12 @@ GRAPH = {
     "nodes": [
         {"id": "ingest", "label": "Ingest"},
         {"id": "clean", "label": "Clean"},
-        {"id": "features", "label": "Features", "shape": "diamond"},
-        {"id": "train", "label": "Train"},
-        {"id": "evaluate", "label": "Evaluate"},
+        # the modeling stages nest inside a compound cluster (`parent`), drawn as a
+        # labeled container behind them
+        {"id": "modeling", "label": "Modeling"},
+        {"id": "features", "label": "Features", "shape": "diamond", "parent": "modeling"},
+        {"id": "train", "label": "Train", "parent": "modeling"},
+        {"id": "evaluate", "label": "Evaluate", "parent": "modeling"},
         {"id": "deploy", "label": "Deploy", "class": "deploy", "shape": "ellipse"},
     ],
     "edges": [
@@ -87,6 +92,11 @@ graph = (
     # the server-pushed highlight and the echoed selection drive CSS via host attributes
     .bind("data-active", "pipeline.active")
     .bind("data-selected", "pipeline.selected")
+    # the emphasis prop mirrors the live selection: clicking a node emphasises it by pure
+    # class toggling on the rendered shapes — no re-layout, no graph prop rebuild. The
+    # prop accepts a single id as [id], so the selection binds directly (spaday 0.7.5's
+    # client compute evaluator has no `arr` case, so `arr(field(...))` cannot drive it)
+    .bind("emphasis", "pipeline.selected")
     # selection is a server round trip: the edit rides the wire up and takes effect when the
     # server echoes it back into the mirrored model, so every tab agrees
     # (the click detail is rich — {id, label, x, y} — so the path picks the id)
@@ -119,6 +129,15 @@ menu = Popup(
         "div",
         element("strong").compute("textContent", _menu_choice),
         element("button", "Select").on("click", Sequence(SendPatch("pipeline", "selected", _menu_choice), close_popup(by_id("graph-menu")))),
+        # focusNode is the component's declared method (Invoke); nodes center themselves,
+        # an edge centers its source
+        element("button", "Focus").on(
+            "click",
+            Sequence(
+                Invoke(by_id("pipeline"), "focusNode", cond(field("menu.id"), field("menu.id"), field("menu.source"))),
+                close_popup(by_id("graph-menu")),
+            ),
+        ),
         element("button", "Clear selection").on("click", Sequence(SendPatch("pipeline", "selected", ""), close_popup(by_id("graph-menu")))),
         class_="ctx-menu",
     ),
