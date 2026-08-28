@@ -168,6 +168,9 @@ interface EdgeLaid {
 // `dagre-edge-click` bubbles `{source, target, label, x, y}` — the graph context plus the
 // pointer's client coordinates, like the contextmenu events — so spaday's `event_value("id")`
 // / `event_value("x")` paths walk the detail; a drag suppresses the trailing click.
+// Sizing: the host draws into an absolutely positioned frame, so it contributes no
+// intrinsic height — give `<spaday-dagre>` or an ancestor an explicit height. An unsized
+// host falls back to the graph's natural height, with a one-time console warning.
 class SpadayDagre extends HTMLElement {
   #graph: DagreGraphConfig = {};
   #layout: DagreLayoutConfig = {};
@@ -201,6 +204,7 @@ class SpadayDagre extends HTMLElement {
       : null;
   #frame = 0;
   #dragged = false;
+  #warnedUnsized = false;
 
   connectedCallback(): void {
     this.style.display ||= "block";
@@ -461,8 +465,17 @@ class SpadayDagre extends HTMLElement {
     // the natural-height fallback must never override an author-sized host (min-height
     // beats height), so re-measure without it each time and reapply only if still unsized
     if (this.style.minHeight) this.style.minHeight = "";
-    if (!this.clientHeight && this.#graphSize.h)
+    if (!this.clientHeight && this.#graphSize.h) {
+      // a rendered host resolving to zero height is almost always a sizing bug: the
+      // frame is absolutely positioned, so the host contributes no intrinsic height
+      if (!this.#warnedUnsized && this.isConnected && this.clientWidth > 0) {
+        this.#warnedUnsized = true;
+        console.warn(
+          "<spaday-dagre> resolved to zero height and fell back to the graph's natural height; give <spaday-dagre> or an ancestor an explicit height.",
+        );
+      }
       this.style.minHeight = `${this.#graphSize.h}px`;
+    }
     const w = this.clientWidth || this.#graphSize.w;
     const h = this.clientHeight || this.#graphSize.h;
     if (!w || !h) return;
@@ -473,9 +486,10 @@ class SpadayDagre extends HTMLElement {
     if (this.#centered) this.#applyView();
     else if (this.#graphSize.w) {
       this.#resetView();
-      // a fallback-sized window (rendered while disconnected) centers again once the
-      // component's real size is measurable
-      this.#centered = this.clientWidth > 0;
+      // a fit against a fallback-sized window (rendered while disconnected, or inside a
+      // hidden container measuring zero) is provisional: keep fitting on every size
+      // change until a fit has run against a real box in both dimensions
+      this.#centered = this.clientWidth > 0 && this.clientHeight > 0;
     }
     this.#placeControls();
   }
@@ -758,7 +772,12 @@ class SpadayDagre extends HTMLElement {
 
     const { viewport } = this.#ensureSvg();
     const { width = 0, height = 0 } = g.graph();
-    this.#graphSize = { w: Math.ceil(width), h: Math.ceil(height) };
+    // an empty graph lays out with -Infinity extents; treat it as size zero so no fit
+    // or natural-height fallback ever runs against garbage numbers
+    this.#graphSize = {
+      w: Number.isFinite(width) ? Math.ceil(width) : 0,
+      h: Number.isFinite(height) ? Math.ceil(height) : 0,
+    };
     this.#syncWindow();
 
     cancelAnimationFrame(this.#frame);

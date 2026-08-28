@@ -1037,3 +1037,122 @@ test("maxLabelWidth caps node width and ellipsizes with a full-label tooltip", a
   expect(r.uncapped.title).toBeNull();
   expect(r.restored).toBeGreaterThan(200);
 });
+
+test("a graph laid out while hidden re-fits when its container becomes visible", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const chain = {
+    nodes: Array.from({ length: 12 }, (_, i) => ({ id: `n${i}` })),
+    edges: Array.from({ length: 11 }, (_, i) => ({
+      source: `n${i}`,
+      target: `n${i + 1}`,
+    })),
+  };
+  const r = await page.evaluate(async (g) => {
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 60));
+    const mount = () => {
+      const panel = document.createElement("div");
+      panel.style.cssText = "width:666px;height:567px";
+      const graph = document.createElement("spaday-dagre");
+      graph.transition = 0;
+      graph.style.cssText = "width:100%;height:100%";
+      panel.append(graph);
+      return { panel, graph };
+    };
+    // reference: the same graph mounted directly visible at the same size
+    const reference = mount();
+    reference.graph.graph = g;
+    document.body.append(reference.panel);
+    // a tab panel built before it is shown: the element mounts empty, the panel hides,
+    // the graph arrives while hidden (a 0x0 box), and the panel is then displayed
+    const tab = mount();
+    document.body.append(tab.panel);
+    await tick();
+    tab.panel.style.display = "none";
+    tab.graph.graph = g;
+    await tick();
+    const whileHidden = tab.graph.view;
+    tab.panel.style.display = "block";
+    // a drawer shown while still empty, whose graph arrives after it is visible
+    const drawer = mount();
+    drawer.panel.style.display = "none";
+    document.body.append(drawer.panel);
+    await tick();
+    drawer.panel.style.display = "block";
+    await tick();
+    drawer.graph.graph = g;
+    await tick();
+    return {
+      whileHidden,
+      tab: tab.graph.view,
+      drawer: drawer.graph.view,
+      reference: reference.graph.view,
+      transform: tab.graph
+        .querySelector(".spaday-dagre-viewport")
+        .getAttribute("transform"),
+    };
+  }, chain);
+  // the reference fit is real: scaled down to fit, centered, finite
+  expect(r.reference.k).toBeGreaterThan(0.2); // not the minimum zoom
+  expect(r.reference.k).toBeLessThan(1); // genuinely fit down to the window
+  expect(Number.isFinite(r.reference.x)).toBe(true);
+  expect(Number.isFinite(r.reference.y)).toBe(true);
+  // becoming visible re-runs the fit-and-center without any user interaction
+  expect(r.tab).toEqual(r.reference);
+  expect(r.drawer).toEqual(r.reference);
+  expect(r.transform).toBe(
+    `translate(${r.reference.x} ${r.reference.y}) scale(${r.reference.k})`,
+  );
+});
+
+test("warns once for a host resolving to zero height, never for a sized one", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(async () => {
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 60));
+    const g = {
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+    };
+    const warnings = [];
+    const original = console.warn;
+    console.warn = (...args) => warnings.push(args.join(" "));
+    // an author-sized host never warns
+    const sized = document.createElement("spaday-dagre");
+    sized.transition = 0;
+    sized.style.cssText = "width:400px;height:300px";
+    document.body.append(sized);
+    sized.graph = g;
+    await tick();
+    const afterSized = warnings.length;
+    // an unsized host resolves to zero height (the frame is absolutely positioned and
+    // contributes none): one warning, then the natural-height fallback sizes it
+    const unsized = document.createElement("spaday-dagre");
+    unsized.transition = 0;
+    document.body.append(unsized);
+    unsized.graph = g;
+    await tick();
+    const afterUnsized = warnings.length;
+    // later size changes re-measure the zero height but must not warn again
+    unsized.style.width = "500px";
+    await tick();
+    unsized.layout = { rankdir: "LR" };
+    await tick();
+    console.warn = original;
+    return {
+      afterSized,
+      afterUnsized,
+      total: warnings.length,
+      message: warnings[0] ?? "",
+      height: unsized.clientHeight,
+    };
+  });
+  expect(r.afterSized).toBe(0);
+  expect(r.afterUnsized).toBe(1);
+  expect(r.total).toBe(1); // once per element, not once per resize
+  expect(r.message).toContain("<spaday-dagre>");
+  expect(r.message).toContain("explicit height");
+  expect(r.height).toBeGreaterThan(0); // the fallback still gives it a usable box
+});

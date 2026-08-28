@@ -10,13 +10,13 @@ __all__ = ["SpadayDagre"]
 
 
 class SpadayDagre(Component):
-    """Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config."""
+    """Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config. The host has no intrinsic height: give it or an ancestor an explicit height."""
 
     tag = "spaday-dagre"
     schema = ComponentSchema(
         tag="spaday-dagre",
         class_name="SpadayDagre",
-        summary="Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config.",
+        summary="Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config. The host has no intrinsic height: give it or an ancestor an explicit height.",
         props=(
             PropertySchema(
                 name="graph",
