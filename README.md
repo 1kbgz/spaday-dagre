@@ -25,7 +25,11 @@ reaches every shape. `dagre-node-click` bubbles `{id, label, x, y}` and `dagre-e
 
 Navigation is dagre-d3-class: cursor-anchored wheel zoom, drag pan (clamped so the graph can never
 be dragged out of view), double-click reset, and an optional GitHub-mermaid-style D-pad
-(`controls`) with pan arrows around a center reset circle.
+(`controls`) with pan arrows around a center reset circle. The view is automatic — fit and
+centered, re-fitted on every host resize or graph change, so a graph built inside a hidden or
+not-yet-sized tab, accordion, or drawer fits when it is shown — until the user pans or zooms or a
+node is focused; a reset, or the `fit()` method (`Invoke(by_id("graph"), "fit")`), makes it
+automatic again.
 
 The host draws into an absolutely positioned frame and contributes no intrinsic height: give
 `<spaday-dagre>` or an ancestor an explicit height (e.g. `style="height: 32rem"`). An unsized host

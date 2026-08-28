@@ -1156,3 +1156,82 @@ test("warns once for a host resolving to zero height, never for a sized one", as
   expect(r.message).toContain("explicit height");
   expect(r.height).toBeGreaterThan(0); // the fallback still gives it a usable box
 });
+
+test("a fit against a transient box never sticks; the user's view does, until fit()", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const chain = {
+    nodes: Array.from({ length: 12 }, (_, i) => ({ id: `n${i}` })),
+    edges: Array.from({ length: 11 }, (_, i) => ({
+      source: `n${i}`,
+      target: `n${i + 1}`,
+    })),
+  };
+  const r = await page.evaluate(async (g) => {
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 60));
+    const mount = (size) => {
+      const panel = document.createElement("div");
+      panel.style.cssText = size;
+      const graph = document.createElement("spaday-dagre");
+      graph.transition = 0;
+      graph.style.cssText = "width:100%;height:100%";
+      panel.append(graph);
+      document.body.append(panel);
+      return { panel, graph };
+    };
+    const big = "width:666px;height:567px";
+    const small = "width:300px;height:150px";
+    const reference = { big: mount(big), small: mount(small) };
+    reference.big.graph.graph = g;
+    reference.small.graph.graph = g;
+    // a tab built before its layout engine sizes it: the graph arrives in a non-zero but
+    // wrong box (both dimensions measurable, the fit bottoms out at the minimum zoom)
+    const tab = mount("width:200px;height:24px");
+    tab.graph.graph = g;
+    await tick();
+    const transient = tab.graph.view;
+    tab.panel.style.cssText = big;
+    await tick();
+    const shown = tab.graph.view;
+    // the user zooms in: from then on a resize keeps their view (clamped), not a re-fit
+    const svg = tab.graph.querySelector("svg");
+    const box = svg.getBoundingClientRect();
+    svg.dispatchEvent(
+      new WheelEvent("wheel", {
+        deltaY: -300,
+        clientX: box.left + 10,
+        clientY: box.top + 10,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    const zoomed = tab.graph.view;
+    tab.panel.style.cssText = small;
+    await tick();
+    const resizedZoomed = tab.graph.view;
+    // fit() restores the automatic view for the current box...
+    tab.graph.fit();
+    const fitted = tab.graph.view;
+    // ...and automatic fitting follows later resizes again
+    tab.panel.style.cssText = big;
+    await tick();
+    const refitted = tab.graph.view;
+    return {
+      transient,
+      shown,
+      zoomed,
+      resizedZoomed,
+      fitted,
+      refitted,
+      big: reference.big.graph.view,
+      small: reference.small.graph.view,
+    };
+  }, chain);
+  expect(r.transient.k).toBe(0.2); // the minimum zoom: the transient fit was garbage
+  expect(r.shown).toEqual(r.big); // ...and did not stick
+  expect(r.zoomed.k).toBeGreaterThan(r.big.k);
+  expect(r.resizedZoomed.k).toBe(r.zoomed.k); // the user's zoom survives the resize
+  expect(r.fitted).toEqual(r.small);
+  expect(r.refitted).toEqual(r.big);
+});
