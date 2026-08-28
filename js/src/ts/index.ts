@@ -194,7 +194,11 @@ class SpadayDagre extends HTMLElement {
   // extent moves within it via the view transform
   #window = { w: 0, h: 0 };
   #graphSize = { w: 0, h: 0 };
-  #centered = false;
+  // the view is automatic (fit-and-centered, re-fitted on every window or graph change) until
+  // the user pans or zooms or a node is focused; a reset or `fit()` makes it automatic again.
+  // A measured box is never trusted as final — a tab, accordion, or drawer built before it is
+  // shown can pass through transient sizes, and a fit against one must not stick.
+  #autoFit = true;
   #controls = false;
   #controlsEl: HTMLDivElement | null = null;
   // tracks the host's size: the svg window and the control pad follow it
@@ -292,7 +296,7 @@ class SpadayDagre extends HTMLElement {
 
   set layout(value: DagreLayoutConfig | null) {
     this.#layout = value ?? {};
-    this.#centered = false; // a new layout re-fits and re-centers the view
+    this.#autoFit = true; // a new layout re-fits and re-centers the view
     this.#render();
   }
   get layout(): DagreLayoutConfig {
@@ -368,7 +372,15 @@ class SpadayDagre extends HTMLElement {
       MAX_ZOOM,
     );
     this.#view = { x: w / 2 - laid.x * k, y: h / 2 - laid.y * k, k };
+    this.#autoFit = false;
     this.#applyView();
+  }
+
+  /** Fit-and-center the whole graph in the window and resume automatic fitting on later
+   * size or graph changes (the double-click / "Reset view" behavior, for hosts to drive:
+   * `Invoke(by_id("graph"), "fit")`). */
+  fit(): void {
+    this.#resetView();
   }
 
   // pure class reconciliation: no layout, no render, no touching the `graph` prop
@@ -483,14 +495,8 @@ class SpadayDagre extends HTMLElement {
     svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
     svg.setAttribute("width", String(w));
     svg.setAttribute("height", String(h));
-    if (this.#centered) this.#applyView();
-    else if (this.#graphSize.w) {
-      this.#resetView();
-      // a fit against a fallback-sized window (rendered while disconnected, or inside a
-      // hidden container measuring zero) is provisional: keep fitting on every size
-      // change until a fit has run against a real box in both dimensions
-      this.#centered = this.clientWidth > 0 && this.clientHeight > 0;
-    }
+    if (this.#autoFit && this.#graphSize.w) this.#resetView();
+    else this.#applyView(); // the user's view survives a resize, clamped into the new window
     this.#placeControls();
   }
 
@@ -513,13 +519,16 @@ class SpadayDagre extends HTMLElement {
   }
 
   #pan(dx: number, dy: number): void {
+    this.#autoFit = false;
     this.#view.x += dx;
     this.#view.y += dy;
     this.#applyView();
   }
 
-  // Fit-and-center: the whole graph visible, centered in the window (also the initial view).
+  // Fit-and-center: the whole graph visible, centered in the window (also the initial view),
+  // and automatic fitting resumes.
   #resetView(): void {
+    this.#autoFit = true;
     const { w, h } = this.#window;
     const { w: gw, h: gh } = this.#graphSize;
     const k = Math.max(MIN_ZOOM, Math.min(1, w / (gw || 1), h / (gh || 1)));
@@ -621,6 +630,7 @@ class SpadayDagre extends HTMLElement {
         this.#view.y =
           cursor.y - ((cursor.y - this.#view.y) / this.#view.k) * k;
         this.#view.k = k;
+        this.#autoFit = false;
         this.#applyView();
       },
       { passive: false },
@@ -643,6 +653,7 @@ class SpadayDagre extends HTMLElement {
         svg.setPointerCapture(event.pointerId);
       }
       this.#dragged = true;
+      this.#autoFit = false;
       this.#view.x += dx;
       this.#view.y += dy;
       panning = at;

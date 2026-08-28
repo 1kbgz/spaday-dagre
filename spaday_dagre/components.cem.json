@@ -85,6 +85,16 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "name": "fit",
+              "description": "Fit-and-center the whole graph in the window and resume automatic fitting on later size or graph changes — the double-click / \"Reset view\" behavior, for hosts to drive with spaday's Invoke action.",
+              "parameters": [],
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
             }
           ],
           "events": [
