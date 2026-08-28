@@ -1,7 +1,7 @@
 <a href="https://github.com/1kbgz/spaday-dagre">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/1kbgz/spaday-dagre/raw/main/docs/img/logo-dark.png?raw=true">
-    <img alt="spaday-dagre logo, a layered directed graph inside a browser window" src="https://github.com/1kbgz/spaday-dagre/raw/main/docs/img/logo-light.png?raw=true" width="800">
+    <img alt="spaday-dagre logo, a layered directed graph inside a browser window" src="https://github.com/1kbgz/spaday-dagre/raw/main/docs/img/logo-light.png?raw=true" width="600">
   </picture>
 </a>
 
