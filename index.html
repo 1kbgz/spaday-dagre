@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="API Reference" href="autoapi/index.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
-        <title>spaday-dagre v0.2.2</title>
+        <title>spaday-dagre v0.2.3</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
@@ -167,7 +167,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="#"><div class="brand">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.2.2</code></div></a>
+      <a href="#"><div class="brand">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.2.3</code></div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -188,7 +188,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
   
-  <span class="sidebar-brand-text">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.2.2</code></span>
+  <span class="sidebar-brand-text">spaday-dagre <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v0.2.3</code></span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -249,7 +249,7 @@
 <a href="https://github.com/1kbgz/spaday-dagre">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/1kbgz/spaday-dagre/raw/main/docs/img/logo-dark.png?raw=true">
-    <img alt="spaday-dagre logo, a layered directed graph inside a browser window" src="https://github.com/1kbgz/spaday-dagre/raw/main/docs/img/logo-light.png?raw=true" width="800">
+    <img alt="spaday-dagre logo, a layered directed graph inside a browser window" src="https://github.com/1kbgz/spaday-dagre/raw/main/docs/img/logo-light.png?raw=true" width="600">
   </picture>
 </a>
 <p>dagre graph rendering for spaday</p>
@@ -269,7 +269,11 @@ reaches every shape. <code class="docutils literal notranslate"><span class="pre
 <code class="docutils literal notranslate"><span class="pre">dagre-edge-contextmenu</span></code> with the same shape, pairing with spaday’s <code class="docutils literal notranslate"><span class="pre">open_popup</span></code> for context menus.</p>
 <p>Navigation is dagre-d3-class: cursor-anchored wheel zoom, drag pan (clamped so the graph can never
 be dragged out of view), double-click reset, and an optional GitHub-mermaid-style D-pad
-(<code class="docutils literal notranslate"><span class="pre">controls</span></code>) with pan arrows around a center reset circle.</p>
+(<code class="docutils literal notranslate"><span class="pre">controls</span></code>) with pan arrows around a center reset circle. The view is automatic — fit and
+centered, re-fitted on every host resize or graph change, so a graph built inside a hidden or
+not-yet-sized tab, accordion, or drawer fits when it is shown — until the user pans or zooms or a
+node is focused; a reset, or the <code class="docutils literal notranslate"><span class="pre">fit()</span></code> method (<code class="docutils literal notranslate"><span class="pre">Invoke(by_id(&quot;graph&quot;),</span> <span class="pre">&quot;fit&quot;)</span></code>), makes it
+automatic again.</p>
 <p>The host draws into an absolutely positioned frame and contributes no intrinsic height: give
 <code class="docutils literal notranslate"><span class="pre">&lt;spaday-dagre&gt;</span></code> or an ancestor an explicit height (e.g. <code class="docutils literal notranslate"><span class="pre">style=&quot;height:</span> <span class="pre">32rem&quot;</span></code>). An unsized host
 falls back to the graph’s natural height, with a one-time console warning.</p>
@@ -409,7 +413,7 @@ via <code class="docutils literal notranslate"><span class="pre">focusNode</span
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=000c92bf"></script>
+</div><script src="_static/documentation_options.js?v=a47416a6"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
