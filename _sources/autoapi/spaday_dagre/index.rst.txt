@@ -39,7 +39,7 @@ Package Contents
    Bases: :py:obj:`spaday.component.Component`
 
 
-   Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config.
+   Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config. The host has no intrinsic height: give it or an ancestor an explicit height.
 
 
    .. py:attribute:: tag
