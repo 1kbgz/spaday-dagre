@@ -27,6 +27,10 @@ Navigation is dagre-d3-class: cursor-anchored wheel zoom, drag pan (clamped so t
 be dragged out of view), double-click reset, and an optional GitHub-mermaid-style D-pad
 (`controls`) with pan arrows around a center reset circle.
 
+The host draws into an absolutely positioned frame and contributes no intrinsic height: give
+`<spaday-dagre>` or an ancestor an explicit height (e.g. `style="height: 32rem"`). An unsized host
+falls back to the graph's natural height, with a one-time console warning.
+
 ## Quick example
 
 ```python

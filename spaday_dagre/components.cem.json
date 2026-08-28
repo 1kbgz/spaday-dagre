@@ -9,7 +9,7 @@
           "name": "SpadayDagre",
           "customElement": true,
           "tagName": "spaday-dagre",
-          "summary": "Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config.",
+          "summary": "Directed graph rendered as themed SVG, laid out by dagre from a serializable node/edge config. The host has no intrinsic height: give it or an ancestor an explicit height.",
           "attributes": [
             {
               "name": "graph",
