@@ -166,13 +166,30 @@ test("runs the Python example: click selects, dark mode re-themes", async ({
     })
     .toBe(true);
   await page.getByRole("checkbox").check();
+  // bind_root_class("wa-dark") re-themes the graph, and in dark mode the node fill now resolves
+  // the shell's own --spa-surface-2 rather than a literal of dagre's, so the graph matches the
+  // surfaces around it instead of only approximating them
+  const shellSurface2 = await page.evaluate(() =>
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--spa-surface-2")
+      .trim(),
+  );
   await expect
     .poll(() =>
       page
         .locator('spaday-dagre [data-node-id="ingest"] rect')
         .evaluate((el) => getComputedStyle(el).fill),
     )
-    .toBe("rgb(36, 45, 56)"); // bind_root_class("wa-dark") re-themes the graph
+    .toBe(
+      await page.evaluate((hex) => {
+        const probe = document.createElement("span");
+        probe.style.color = hex;
+        document.body.appendChild(probe);
+        const rgb = getComputedStyle(probe).color;
+        probe.remove();
+        return rgb;
+      }, shellSurface2),
+    );
 });
 
 test("zooms at the cursor, pans by drag, resets on double-click", async ({
@@ -773,6 +790,90 @@ test("consumer --dagre-* tokens re-theme both modes; emphasis wears the accent",
   expect(r.themedDark).toBe("rgb(10, 20, 30)"); // ...and wins in dark mode too
   expect(r.emphasis.stroke).toBe("rgb(200, 50, 100)"); // config class "emphasis" is forwarded
   expect(r.emphasis.width).toBe("2.5px"); // and outlined with the accent
+});
+
+test("--spa-dagre-* tokens theme the graph and outrank the legacy --dagre-* spelling", async ({
+  page,
+}) => {
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.graph = { nodes: [{ id: "a" }], edges: [] };
+    document.body.appendChild(graph);
+    const fill = () =>
+      getComputedStyle(graph.querySelector('[data-node-id="a"] rect')).fill;
+
+    graph.style.setProperty("--spa-dagre-node-fill", "rgb(1, 2, 3)");
+    const packageToken = fill();
+    // both spellings set: the documented one wins, the alias stays a fallback
+    graph.style.setProperty("--dagre-node-fill", "rgb(9, 9, 9)");
+    const bothSet = fill();
+    graph.style.removeProperty("--spa-dagre-node-fill");
+    const aliasOnly = fill();
+
+    document.documentElement.classList.add("wa-dark");
+    graph.style.setProperty("--spa-dagre-node-fill", "rgb(4, 5, 6)");
+    const darkPackageToken = fill();
+    document.documentElement.classList.remove("wa-dark");
+    return { packageToken, bothSet, aliasOnly, darkPackageToken };
+  });
+  expect(r.packageToken).toBe("rgb(1, 2, 3)");
+  expect(r.bothSet).toBe("rgb(1, 2, 3)");
+  expect(r.aliasOnly).toBe("rgb(9, 9, 9)");
+  expect(r.darkPackageToken).toBe("rgb(4, 5, 6)");
+});
+
+test("a --spa-dagre-* token set on an ancestor reaches the graph", async ({
+  page,
+}) => {
+  // the App-level theming case: `App().css(spa_dagre_node_fill=...)` sets the token on the shell
+  // root, not on the graph. A package that *defined* its tokens on its own element would shadow
+  // that inherited value and silently ignore the app's theme.
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const host = document.createElement("div");
+    const graph = document.createElement("spaday-dagre");
+    graph.graph = { nodes: [{ id: "a" }], edges: [] };
+    host.appendChild(graph);
+    document.body.appendChild(host);
+    const fill = () =>
+      getComputedStyle(graph.querySelector('[data-node-id="a"] rect')).fill;
+
+    host.style.setProperty("--spa-dagre-node-fill", "rgb(11, 22, 33)");
+    const fromAncestor = fill();
+    document.documentElement.classList.add("wa-dark");
+    const fromAncestorDark = fill();
+    document.documentElement.classList.remove("wa-dark");
+    return { fromAncestor, fromAncestorDark };
+  });
+  expect(r.fromAncestor).toBe("rgb(11, 22, 33)");
+  expect(r.fromAncestorDark).toBe("rgb(11, 22, 33)");
+});
+
+test("the graph follows the shell palette in both modes", async ({ page }) => {
+  // the promise the package makes: re-theme the shell and the graph comes with it. Dark mode used
+  // to opt out of this by baking its own literals.
+  await page.goto("/dist/index.html");
+  const r = await page.evaluate(() => {
+    const graph = document.createElement("spaday-dagre");
+    graph.graph = { nodes: [{ id: "a" }], edges: [] };
+    document.body.appendChild(graph);
+    const fill = () =>
+      getComputedStyle(graph.querySelector('[data-node-id="a"] rect')).fill;
+
+    document.documentElement.style.setProperty(
+      "--spa-surface-2",
+      "rgb(7, 8, 9)",
+    );
+    const light = fill();
+    document.documentElement.classList.add("wa-dark");
+    const dark = fill();
+    document.documentElement.classList.remove("wa-dark");
+    document.documentElement.style.removeProperty("--spa-surface-2");
+    return { light, dark };
+  });
+  expect(r.light).toBe("rgb(7, 8, 9)");
+  expect(r.dark).toBe("rgb(7, 8, 9)");
 });
 
 test("emphasis toggles node classes without re-layout and survives re-renders", async ({
