@@ -40,4 +40,4 @@ TOKENS = {
     "spa_dagre_control_border": ("--spa-dagre-control-border", "zoom control border (defaults to --spa-border)"),
 }
 
-__all__ = ["Dagre", "SpadayDagre", "TOKENS", "package"]
+__all__ = ["TOKENS", "Dagre", "SpadayDagre", "package"]
