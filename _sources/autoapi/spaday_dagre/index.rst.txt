@@ -21,6 +21,7 @@ Attributes
 
    spaday_dagre.package
    spaday_dagre.Dagre
+   spaday_dagre.TOKENS
 
 
 Classes
@@ -53,4 +54,6 @@ Package Contents
 .. py:data:: package
 
 .. py:data:: Dagre
+
+.. py:data:: TOKENS
 

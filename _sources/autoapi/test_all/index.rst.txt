@@ -4,6 +4,14 @@ test_all
 .. py:module:: test_all
 
 
+Attributes
+----------
+
+.. autoapisummary::
+
+   test_all.LEGACY
+
+
 Functions
 ---------
 
@@ -12,6 +20,8 @@ Functions
    test_all.test_dagre_serializes_graph_layout_and_events
    test_all.test_package_drives_bootstrap_assets
    test_all.test_generated_component_is_current
+   test_all.test_tokens_documents_exactly_what_the_stylesheet_exposes
+   test_all.test_the_tokens_that_shipped_earlier_keep_their_legacy_spelling
 
 
 Module Contents
@@ -22,4 +32,17 @@ Module Contents
 .. py:function:: test_package_drives_bootstrap_assets()
 
 .. py:function:: test_generated_component_is_current()
+
+.. py:function:: test_tokens_documents_exactly_what_the_stylesheet_exposes()
+
+   TOKENS is what a Python author discovers; the stylesheet is what renders. Drift between the
+   two is how a package ends up with themeable colors nobody knows about.
+
+
+.. py:data:: LEGACY
+
+.. py:function:: test_the_tokens_that_shipped_earlier_keep_their_legacy_spelling()
+
+   The pre-0.2.4 --dagre-* names stay working as aliases, in every mode block.
+
 
