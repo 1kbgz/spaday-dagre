@@ -23,6 +23,8 @@ dagre graph rendering for spaday
 [![License](https://img.shields.io/github/license/1kbgz/spaday-dagre)](https://github.com/1kbgz/spaday-dagre)
 [![PyPI](https://img.shields.io/pypi/v/spaday-dagre.svg)](https://pypi.python.org/pypi/spaday-dagre)
 
+[![Preview of dagre page](https://raw.githubusercontent.com/1kbgz/spaday-dagre/main/docs/img/preview.webp)](./spaday_dagre/example.py)
+
 ## Overview
 
 `spaday-dagre` renders directed graphs in [spaday](https://1kbgz.github.io/spaday/) from a
