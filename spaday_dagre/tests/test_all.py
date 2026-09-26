@@ -43,6 +43,18 @@ def test_tokens_documents_exactly_what_the_stylesheet_exposes():
     assert not re.findall(r"(?<![-\w])(--spa-dagre-[a-z-]+):", css), "a public token must not be defined; it would shadow an inherited one"
 
 
+def test_structured_fallbacks_match_the_stylesheet():
+    import re
+
+    css = re.sub(r"\s+", "", (Path(__file__).parents[2] / "js" / "src" / "css" / "index.css").read_text())
+    for token in (token for token in TOKENS.values() if token.fallback is not None):
+        prop = token.property
+        fallback = token.fallback
+        private = prop.replace("--spa-", "--_spa-")
+        definitions = re.findall(rf"{private}:([^;]+);", css)
+        assert definitions and all(f"var({fallback}," in definition for definition in definitions)
+
+
 #: token → the --dagre-* spelling it shipped under before 0.2.4, which stays working as an alias
 #: (cluster text has always been driven by --dagre-node-text)
 LEGACY = {

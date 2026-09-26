@@ -118,7 +118,7 @@ spaday-dagre {
   );
   --_spa-dagre-cluster-text: var(
     --spa-dagre-cluster-text,
-    var(--dagre-node-text, #aab3bd)
+    var(--dagre-node-text, var(--spa-muted, #aab3bd))
   );
   --_spa-dagre-accent: var(
     --spa-dagre-accent,
