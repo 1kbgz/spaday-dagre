@@ -21,6 +21,7 @@ Functions
    test_all.test_package_drives_bootstrap_assets
    test_all.test_generated_component_is_current
    test_all.test_tokens_documents_exactly_what_the_stylesheet_exposes
+   test_all.test_structured_fallbacks_match_the_stylesheet
    test_all.test_the_tokens_that_shipped_earlier_keep_their_legacy_spelling
 
 
@@ -38,6 +39,8 @@ Module Contents
    TOKENS is what a Python author discovers; the stylesheet is what renders. Drift between the
    two is how a package ends up with themeable colors nobody knows about.
 
+
+.. py:function:: test_structured_fallbacks_match_the_stylesheet()
 
 .. py:data:: LEGACY
 
