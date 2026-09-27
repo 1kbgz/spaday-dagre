@@ -802,7 +802,6 @@ test("--spa-dagre-* tokens theme the graph and outrank the legacy --dagre-* spel
     document.body.appendChild(graph);
     const fill = () =>
       getComputedStyle(graph.querySelector('[data-node-id="a"] rect')).fill;
-
     graph.style.setProperty("--spa-dagre-node-fill", "rgb(1, 2, 3)");
     const packageToken = fill();
     // both spellings set: the documented one wins, the alias stays a fallback
@@ -860,20 +859,25 @@ test("the graph follows the shell palette in both modes", async ({ page }) => {
     document.body.appendChild(graph);
     const fill = () =>
       getComputedStyle(graph.querySelector('[data-node-id="a"] rect')).fill;
+    const text = () =>
+      getComputedStyle(graph.querySelector('[data-node-id="a"] text')).fill;
 
     document.documentElement.style.setProperty(
       "--spa-surface-2",
       "rgb(7, 8, 9)",
     );
+    document.documentElement.style.setProperty("--spa-text", "rgb(10, 11, 12)");
     const light = fill();
+    const label = text();
     document.documentElement.classList.add("wa-dark");
     const dark = fill();
     document.documentElement.classList.remove("wa-dark");
     document.documentElement.style.removeProperty("--spa-surface-2");
-    return { light, dark };
+    return { light, dark, label };
   });
   expect(r.light).toBe("rgb(7, 8, 9)");
   expect(r.dark).toBe("rgb(7, 8, 9)");
+  expect(r.label).toBe("rgb(10, 11, 12)");
 });
 
 test("emphasis toggles node classes without re-layout and survives re-renders", async ({

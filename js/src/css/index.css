@@ -43,7 +43,7 @@ spaday-dagre {
   );
   --_spa-dagre-node-text: var(
     --spa-dagre-node-text,
-    var(--dagre-node-text, #3f464d)
+    var(--dagre-node-text, var(--spa-text, #3f464d))
   );
   --_spa-dagre-edge-stroke: var(
     --spa-dagre-edge-stroke,
@@ -98,7 +98,7 @@ spaday-dagre {
   );
   --_spa-dagre-node-text: var(
     --spa-dagre-node-text,
-    var(--dagre-node-text, #d7dce2)
+    var(--dagre-node-text, var(--spa-text, #d7dce2))
   );
   --_spa-dagre-edge-stroke: var(
     --spa-dagre-edge-stroke,

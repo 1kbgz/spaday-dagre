@@ -31,7 +31,7 @@ Dagre = SpadayDagre
 TOKENS = {
     "spa_dagre_node_fill": Token("--spa-dagre-node-fill", "node background", fallback="--spa-surface-2"),
     "spa_dagre_node_stroke": Token("--spa-dagre-node-stroke", "node outline", fallback="--spa-muted"),
-    "spa_dagre_node_text": Token("--spa-dagre-node-text", "node label color"),
+    "spa_dagre_node_text": Token("--spa-dagre-node-text", "node label color", fallback="--spa-text"),
     "spa_dagre_edge_stroke": Token("--spa-dagre-edge-stroke", "edge and arrowhead color", fallback="--spa-muted"),
     "spa_dagre_edge_label": Token("--spa-dagre-edge-label", "edge label color", fallback="--spa-muted"),
     "spa_dagre_edge_label_halo": Token("--spa-dagre-edge-label-halo", "halo drawn behind an edge label", fallback="--spa-surface"),
