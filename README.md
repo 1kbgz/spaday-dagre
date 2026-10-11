@@ -12,7 +12,7 @@ dagre graph rendering for spaday
 [![License](https://img.shields.io/github/license/1kbgz/spaday-dagre)](https://github.com/1kbgz/spaday-dagre)
 [![PyPI](https://img.shields.io/pypi/v/spaday-dagre.svg)](https://pypi.python.org/pypi/spaday-dagre)
 
-[![Preview of dagre page](https://raw.githubusercontent.com/1kbgz/spaday-dagre/main/docs/img/preview.webp)](./spaday_dagre/example.py)
+[![Preview of the spaday-dagre pipeline explorer](https://raw.githubusercontent.com/1kbgz/spaday-dagre/main/docs/img/preview.webp)](https://1kbgz.github.io/spaday-dagre/lite/)
 
 ## Overview
 
@@ -97,9 +97,18 @@ Node and edge `class` values are forwarded onto the rendered `<g>` groups (along
 `spaday-dagre-node` / `spaday-dagre-edge`), so custom classes are CSS-targetable directly. One
 variant is built in: a node or edge whose `class` includes `emphasis` gets an accent outline.
 
-## Run the local example
+## Browser examples
+
+- [Open the pipeline explorer](https://1kbgz.github.io/spaday-dagre/lite/) ([source](spaday_dagre/example.py)).
+
+Python runs in a Pyodide worker with the same component tree and transports model as the local
+example. Node and edge selections round-trip through Python; the active-stage highlight updates
+without a backend server. Each browser tab has its own model.
+
+## Run the examples locally
 
 ```bash
+python -m pip install -e ".[examples]"
 python -m spaday_dagre.example
 ```
 
@@ -108,6 +117,17 @@ active-stage highlight through the graph while node/edge selection rides back as
 direction switching, mixed node shapes, a "modeling" cluster grouping the middle stages, selection
 mirrored into the `emphasis` prop, a right-click menu for nodes and edges (its Focus item centers
 via `focusNode`), view controls, and the dark-mode toggle.
+
+To build and serve the browser version from a checkout:
+
+```bash
+make develop
+make pyodide-example
+python -m http.server 8000 --directory dist
+```
+
+Open <http://127.0.0.1:8000/lite/>. The first load downloads Pyodide and Python dependencies;
+an internet connection is required. Run `make test-pyodide-example` to check the browser demo.
 
 > [!NOTE]
 > This library was generated using [copier](https://copier.readthedocs.io/en/stable/) from the [Base Python Project Template repository](https://github.com/python-project-templates/base).

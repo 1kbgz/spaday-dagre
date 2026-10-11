@@ -36,8 +36,8 @@ install:  ## install python library
 #########
 .PHONY: lint-py lint-js lint lints
 lint-py:  ## run python linter with ruff
-	python -m ruff check spaday_dagre
-	python -m ruff format --check spaday_dagre
+	python -m ruff check spaday_dagre js/examples
+	python -m ruff format --check spaday_dagre js/examples
 
 lint-js:  ## run js linter
 	cd js; pnpm lint
@@ -105,6 +105,20 @@ test-js:  ## run js tests
 tests-js: test-js
 
 coverage-js: test-js  ## run js tests and collect test coverage
+
+.PHONY: pyodide-example test-pyodide-example
+pyodide-example: build  ## build the standalone Pyodide example into dist/lite
+	test -n "$(firstword $(wildcard dist/spaday_dagre-*.whl))"
+	rm -rf dist/lite dist/pyodide-deps
+	mkdir -p dist/lite dist/pyodide-deps
+	python -m pip download --no-deps --only-binary=:all: --platform pyemscripten_2026_0_wasm32 --python-version 314 --implementation cp --abi cp314 --dest dist/pyodide-deps "spaday==0.12.0" "transports==0.10.0"
+	python js/examples/build_pyodide_example.py dist/lite "$(firstword $(wildcard dist/spaday_dagre-*.whl))" dist/pyodide-deps
+	cp js/examples/pyodide.html dist/lite/index.html
+	cp js/examples/pyodide-worker.js dist/lite/
+test-pyodide-example: pyodide-example  ## run the standalone Pyodide example in Chromium
+	rm -rf js/dist/lite
+	cp -r dist/lite js/dist/lite
+	cd js; SPADAY_PYODIDE_ONLY=1 pnpm exec playwright test tests/pyodide.spec.js
 
 .PHONY: test coverage tests
 test: test-py test-js  ## run all tests
