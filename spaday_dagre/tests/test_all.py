@@ -12,6 +12,7 @@ def test_dagre_serializes_graph_layout_and_events():
     assert node["tag"] == "spaday-dagre"
     assert node["props"]["graph"]["Map"]["nodes"]["List"][0]["Map"]["id"] == {"Str": "a"}
     assert node["props"]["layout"]["Map"]["rankdir"] == {"Str": "LR"}
+    assert Dagre.schema is not None
     assert "dagre-node-click" in Dagre.schema.events
     assert "dagre-edge-click" in Dagre.schema.events
 
