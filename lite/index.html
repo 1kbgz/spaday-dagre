@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>spaday-dagre in Pyodide</title>
+    <link rel="stylesheet" href="./components/dagre/css/index.css" />
+    <style>
+      #pyodide-status {
+        position: sticky;
+        z-index: 10000;
+        top: 0;
+        box-sizing: border-box;
+        min-height: 3rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #cbd5e1;
+        color: #475569;
+        background: #fffffff2;
+        font:
+          14px/1.4 system-ui,
+          sans-serif;
+        backdrop-filter: blur(12px);
+      }
+      #pyodide-error {
+        margin: 1rem;
+        color: #b91c1c;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="pyodide-status" role="status">Loading Python in the browser…</div>
+    <div id="example-root"></div>
+    <pre id="pyodide-error" role="alert" hidden></pre>
+    <script type="module">
+      import {
+        connectStore,
+        init,
+        mount,
+        Store,
+      } from "./runtime/spaday/cdn/index.js";
+      import "./components/dagre/cdn/index.js";
+      import * as transports from "./runtime/spaday/transports/cdn/index.js";
+
+      const status = document.querySelector("#pyodide-status");
+      let receiveWires = () => {};
+      let worker;
+      let flushTimer;
+
+      function fail(error) {
+        clearInterval(flushTimer);
+        worker?.terminate();
+        status.textContent = "Unable to start";
+        const output = document.querySelector("#pyodide-error");
+        output.hidden = false;
+        output.textContent = String(error);
+      }
+
+      try {
+        await init({ module_or_path: "./runtime/spaday/pkg/spaday_bg.wasm" });
+        await transports.wasm.default({
+          module_or_path: "./runtime/spaday/transports/pkg/transports_bg.wasm",
+        });
+        worker = new Worker("./pyodide-worker.js", { type: "module" });
+        worker.addEventListener("error", (event) => fail(event.message));
+        worker.addEventListener("message", (event) => {
+          try {
+            if (event.data.type === "status")
+              status.textContent = event.data.message;
+            if (event.data.type === "error") fail(event.data.message);
+            if (event.data.type === "wires") receiveWires(event.data.wires);
+            if (event.data.type === "snapshot") {
+              const {
+                tree,
+                style,
+                store: initialStore,
+                wires,
+              } = event.data.payload;
+              document.head.insertAdjacentHTML("beforeend", style);
+              const store = new Store(initialStore);
+              const client = new transports.Client();
+              const link = connectStore(
+                store,
+                client,
+                (frame) => worker.postMessage({ type: "wire", frame }),
+                transports,
+                "pipeline",
+              );
+              receiveWires = (frames) => {
+                for (const frame of frames) link.receive(frame);
+              };
+              receiveWires(wires);
+              document
+                .querySelector("#example-root")
+                .addEventListener("spaday:patch", (event) => {
+                  const { model, field, value } = event.detail;
+                  store.set(model ? `${model}.${field}` : field, value);
+                });
+              mount(document.querySelector("#example-root"), tree, store);
+              flushTimer = window.setInterval(
+                () => worker.postMessage({ type: "flush" }),
+                100,
+              );
+              status.textContent =
+                "Ready · Python example running in this browser";
+              document.documentElement.dataset.ready = "true";
+            }
+          } catch (error) {
+            fail(error);
+          }
+        });
+        worker.postMessage({ type: "start" });
+      } catch (error) {
+        fail(error);
+      }
+    </script>
+  </body>
+</html>

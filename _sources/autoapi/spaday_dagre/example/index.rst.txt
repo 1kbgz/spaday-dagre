@@ -39,6 +39,7 @@ Attributes
    spaday_dagre.example.page
    spaday_dagre.example._HIGHLIGHTS
    spaday_dagre.example.STYLES
+   spaday_dagre.example.initial_store
    spaday_dagre.example.app
 
 
@@ -216,6 +217,8 @@ Module Contents
       </details>
 
 
+
+.. py:data:: initial_store
 
 .. py:data:: app
 

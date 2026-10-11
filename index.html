@@ -259,7 +259,7 @@
 <a class="reference external" href="https://codecov.io/gh/1kbgz/spaday-dagre"><img alt="codecov" src="https://codecov.io/gh/1kbgz/spaday-dagre/branch/main/graph/badge.svg" /></a>
 <a class="reference external" href="https://github.com/1kbgz/spaday-dagre"><img alt="License" src="https://img.shields.io/github/license/1kbgz/spaday-dagre" /></a>
 <a class="reference external" href="https://pypi.python.org/pypi/spaday-dagre"><img alt="PyPI" src="https://img.shields.io/pypi/v/spaday-dagre.svg" /></a></p>
-<p><a class="reference download internal" download="" href="_downloads/91fafa391cb52e5d1d2b1426614aed6e/example.py"><span class="xref download myst"><img alt="Preview of dagre page" src="https://raw.githubusercontent.com/1kbgz/spaday-dagre/main/docs/img/preview.webp" /></span></a></p>
+<p><a class="reference external" href="https://1kbgz.github.io/spaday-dagre/lite/"><img alt="Preview of the spaday-dagre pipeline explorer" src="https://raw.githubusercontent.com/1kbgz/spaday-dagre/main/docs/img/preview.webp" /></a></p>
 <section id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">spaday-dagre</span></code> renders directed graphs in <a class="reference external" href="https://1kbgz.github.io/spaday/">spaday</a> from a
@@ -361,9 +361,19 @@ light and dark page modes:</p>
 <code class="docutils literal notranslate"><span class="pre">spaday-dagre-node</span></code> / <code class="docutils literal notranslate"><span class="pre">spaday-dagre-edge</span></code>), so custom classes are CSS-targetable directly. One
 variant is built in: a node or edge whose <code class="docutils literal notranslate"><span class="pre">class</span></code> includes <code class="docutils literal notranslate"><span class="pre">emphasis</span></code> gets an accent outline.</p>
 </section>
-<section id="run-the-local-example">
-<h1>Run the local example<a class="headerlink" href="#run-the-local-example" title="Link to this heading">¶</a></h1>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>spaday_dagre.example
+<section id="browser-examples">
+<h1>Browser examples<a class="headerlink" href="#browser-examples" title="Link to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference external" href="https://1kbgz.github.io/spaday-dagre/lite/">Open the pipeline explorer</a> (<a class="reference download internal" download="" href="_downloads/91fafa391cb52e5d1d2b1426614aed6e/example.py"><span class="xref download myst">source</span></a>).</p></li>
+</ul>
+<p>Python runs in a Pyodide worker with the same component tree and transports model as the local
+example. Node and edge selections round-trip through Python; the active-stage highlight updates
+without a backend server. Each browser tab has its own model.</p>
+</section>
+<section id="run-the-examples-locally">
+<h1>Run the examples locally<a class="headerlink" href="#run-the-examples-locally" title="Link to this heading">¶</a></h1>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[examples]"</span>
+python<span class="w"> </span>-m<span class="w"> </span>spaday_dagre.example
 </pre></div>
 </div>
 <p>Open <a class="reference external" href="http://127.0.0.1:8016">http://127.0.0.1:8016</a>: a pipeline DAG live over a transports wire — the server sweeps an
@@ -371,6 +381,14 @@ active-stage highlight through the graph while node/edge selection rides back as
 direction switching, mixed node shapes, a “modeling” cluster grouping the middle stages, selection
 mirrored into the <code class="docutils literal notranslate"><span class="pre">emphasis</span></code> prop, a right-click menu for nodes and edges (its Focus item centers
 via <code class="docutils literal notranslate"><span class="pre">focusNode</span></code>), view controls, and the dark-mode toggle.</p>
+<p>To build and serve the browser version from a checkout:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>develop
+make<span class="w"> </span>pyodide-example
+python<span class="w"> </span>-m<span class="w"> </span>http.server<span class="w"> </span><span class="m">8000</span><span class="w"> </span>--directory<span class="w"> </span>dist
+</pre></div>
+</div>
+<p>Open <a class="reference external" href="http://127.0.0.1:8000/lite/">http://127.0.0.1:8000/lite/</a>. The first load downloads Pyodide and Python dependencies;
+an internet connection is required. Run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test-pyodide-example</span></code> to check the browser demo.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This library was generated using <a class="reference external" href="https://copier.readthedocs.io/en/stable/">copier</a> from the <a class="reference external" href="https://github.com/python-project-templates/base">Base Python Project Template repository</a>.</p>

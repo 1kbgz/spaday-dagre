@@ -291,13 +291,15 @@ STYLES = f"""
 </style>
 """
 
+initial_store = {"rankdir": "TB", "dark": False, "menu": {}}
+
 app = serve(
     page,
     packages=[package],
     wire=[Wire("/ws", namespace="pipeline")],
     routes=[WebSocketRoute("/ws", transports.ws_endpoint(server))],
     background=[transports.autosync(server), sweep()],
-    store={"rankdir": "TB", "dark": False, "menu": {}},
+    store=initial_store,
     head=STYLES,
     title="spaday-dagre example",
 )
