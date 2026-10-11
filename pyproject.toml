@@ -52,6 +52,7 @@ develop = [
     "hatch-js",
     "hatchling",
     "mdformat",
+    "mdformat-frontmatter",
     "mdformat-tables>=1",
     "pydantic>=2",
     "pytest",
@@ -102,7 +103,7 @@ replace = '"version": "{new_version}"'
 branch = true
 omit = [
     "spaday_dagre/example.py",
-    "spaday_dagre/tests/integration/",
+    "spaday_dagre/tests/integration/*",
 ]
 
 [tool.coverage.report]
