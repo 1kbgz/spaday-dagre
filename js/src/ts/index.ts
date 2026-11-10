@@ -3,6 +3,7 @@ import * as dagre from "@dagrejs/dagre";
 export interface DagreNode {
   id: string;
   label?: string;
+  tooltip?: string;
   width?: number;
   height?: number;
   class?: string;
@@ -15,6 +16,7 @@ export interface DagreEdge {
   source: string;
   target: string;
   label?: string;
+  tooltip?: string;
   class?: string;
 }
 
@@ -183,6 +185,8 @@ class SpadayDagre extends HTMLElement {
   #svg: SVGSVGElement | null = null;
   #viewport: SVGGElement | null = null;
   #clusterLayer: SVGGElement | null = null;
+  #tooltip: HTMLDivElement | null = null;
+  #tooltipPointer: PointerEvent | null = null;
   #nodeEls = new Map<string, SVGGElement>();
   #edgeEls = new Map<string, SVGGElement>();
   #clusterEls = new Map<string, SVGGElement>();
@@ -284,6 +288,10 @@ class SpadayDagre extends HTMLElement {
         );
       }
     });
+  }
+
+  disconnectedCallback(): void {
+    this.#hideTooltip();
   }
 
   set graph(value: DagreGraphConfig | null) {
@@ -463,9 +471,59 @@ class SpadayDagre extends HTMLElement {
     const frame = document.createElement("div");
     frame.className = "spaday-dagre-frame";
     frame.append(svg);
-    this.replaceChildren(frame);
+    const tooltip = document.createElement("div");
+    tooltip.className = "spaday-dagre-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    tooltip.hidden = true;
+    this.#tooltip = tooltip;
+    svg.addEventListener("pointermove", (event) => {
+      if (event.buttons || event.pointerType === "touch") return;
+      this.#tooltipPointer = event;
+      this.#syncTooltip();
+    });
+    svg.addEventListener("pointerleave", () => this.#hideTooltip());
+    svg.addEventListener("pointerdown", () => this.#hideTooltip());
+    svg.addEventListener("wheel", () => this.#hideTooltip());
+    this.replaceChildren(frame, tooltip);
     this.#syncControls();
     return { svg, viewport };
+  }
+
+  #hideTooltip(): void {
+    this.#tooltipPointer = null;
+    if (this.#tooltip) this.#tooltip.hidden = true;
+  }
+
+  #syncTooltip(): void {
+    const event = this.#tooltipPointer;
+    const tooltip = this.#tooltip;
+    if (!event || !tooltip) return;
+    const group = (event.target as Element).closest(
+      "[data-node-id], [data-edge-source]",
+    );
+    if (!group || !this.contains(group)) {
+      this.#hideTooltip();
+      return;
+    }
+    const id = group.getAttribute("data-node-id");
+    const config =
+      id !== null
+        ? this.#graph.nodes?.find((node) => node.id === id)
+        : this.#graph.edges?.find(
+            (edge) =>
+              edge.source === group.getAttribute("data-edge-source") &&
+              edge.target === group.getAttribute("data-edge-target"),
+          );
+    const text = config?.tooltip ?? group.querySelector("title")?.textContent;
+    if (!text) {
+      this.#hideTooltip();
+      return;
+    }
+    if (tooltip.textContent !== text) tooltip.textContent = text;
+    tooltip.hidden = false;
+    const bounds = this.getBoundingClientRect();
+    tooltip.style.left = `${Math.max(0, Math.min(event.clientX - bounds.left + 12, this.clientWidth - tooltip.offsetWidth))}px`;
+    tooltip.style.top = `${Math.max(0, Math.min(event.clientY - bounds.top + 12, this.clientHeight - tooltip.offsetHeight))}px`;
   }
 
   // Size the svg window to the component: the graph pans across the component's full
@@ -1055,6 +1113,7 @@ class SpadayDagre extends HTMLElement {
     this.#edgeLaid = nextEdgeLaid;
     this.#clusterLaid = nextClusterLaid;
     this.#applyEmphasis(); // re-applied so emphasis survives graph/layout changes
+    this.#syncTooltip();
 
     if (steps.length && duration) {
       const start = performance.now();

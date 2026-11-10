@@ -23,7 +23,7 @@ class SpadayDagre(Component):
                 kind="json",
                 choices=(),
                 default=None,
-                description="The graph: {nodes: [{id, label, width, height, class, shape, parent}], edges: [{source, target, label, class}]}. A node's `parent` nests it inside that id's cluster (compound layout).",
+                description="The graph: {nodes: [{id, label, tooltip, width, height, class, shape, parent}], edges: [{source, target, label, tooltip, class}]}. A node's `parent` nests it inside that id's cluster (compound layout). Node, cluster, and edge tooltips show plain text on hover.",
             ),
             PropertySchema(
                 name="layout",

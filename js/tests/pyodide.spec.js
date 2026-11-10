@@ -51,6 +51,15 @@ test("renders the Python pipeline and round-trips selection through transports",
   const graph = page.locator("spaday-dagre");
   await expect(graph.locator("[data-node-id]")).toHaveCount(7);
   await expect(graph.locator(".spaday-dagre-edge-line")).toHaveCount(6);
+  await graph.locator('[data-node-id="ingest"] rect').hover();
+  await expect(graph.getByRole("tooltip")).toHaveText("Load source data");
+  await graph
+    .locator(".spaday-dagre-edge-label")
+    .filter({ hasText: "rows" })
+    .hover();
+  await expect(graph.getByRole("tooltip")).toHaveText(
+    "Clean rows ready for feature extraction",
+  );
   const initialActive = await graph.getAttribute("data-active");
   await expect
     .poll(() => graph.getAttribute("data-active"))

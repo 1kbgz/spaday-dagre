@@ -22,6 +22,16 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "firefox",
+      testMatch: "tooltips.spec.js",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      testMatch: "tooltips.spec.js",
+      use: { ...devices["Desktop Safari"] },
+    },
   ],
   webServer: [
     {
