@@ -33,11 +33,11 @@ for _i, _node in enumerate(ORDER):
 
 GRAPH = {
     "nodes": [
-        {"id": "ingest", "label": "Ingest"},
+        {"id": "ingest", "label": "Ingest", "tooltip": "Load source data"},
         {"id": "clean", "label": "Clean"},
         # the modeling stages nest inside a compound cluster (`parent`), drawn as a
         # labeled container behind them
-        {"id": "modeling", "label": "Modeling"},
+        {"id": "modeling", "label": "Modeling", "tooltip": "Build and evaluate the model"},
         {"id": "features", "label": "Features", "shape": "diamond", "parent": "modeling"},
         {"id": "train", "label": "Train", "parent": "modeling"},
         {"id": "evaluate", "label": "Evaluate", "parent": "modeling"},
@@ -45,7 +45,7 @@ GRAPH = {
     ],
     "edges": [
         {"source": "ingest", "target": "clean"},
-        {"source": "clean", "target": "features", "label": "rows"},
+        {"source": "clean", "target": "features", "label": "rows", "tooltip": "Clean rows ready for feature extraction"},
         {"source": "features", "target": "train"},
         {"source": "features", "target": "evaluate"},
         {"source": "train", "target": "evaluate", "label": "model"},

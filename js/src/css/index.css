@@ -153,6 +153,24 @@ spaday-dagre .spaday-dagre-frame {
   inset: 0;
 }
 
+spaday-dagre .spaday-dagre-tooltip {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  box-sizing: border-box;
+  max-width: min(24rem, 100%);
+  padding: 6px 10px;
+  border: 1px solid var(--_spa-dagre-cluster-stroke);
+  border-radius: 4px;
+  background: var(--_spa-dagre-node-fill);
+  color: var(--_spa-dagre-node-text);
+  font:
+    12px/1.4 system-ui,
+    sans-serif;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 spaday-dagre svg {
   display: block;
   width: 100%;
