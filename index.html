@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Overview &#8212; spaday-dagre v0.3.0</title>
+    <title>Overview &#8212; spaday-dagre v0.3.1</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/fuma.css?v=ca04d621" />
     <link rel="stylesheet" type="text/css" href="_static/fuma-code.css?v=a950e949" />
@@ -13,15 +13,15 @@
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
     <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="_static/fonts/fuma-fonts.css?v=c2892c73" />
     <link rel="stylesheet" type="text/css" href="_static/styles/custom.css?v=88c24c6a" />
-    <script src="_static/documentation_options.js?v=e259d695"></script>
+    <script src="_static/documentation_options.js?v=4621528c"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
-    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="_static/design-tabs.js?v=fcb327ea"></script>
     <script data-searchlite-index="searchlite-index.json" defer="defer" src="_static/searchlite.js?v=a5320898"></script>
     <script defer="defer" src="_static/fuma.js?v=9c325f6c"></script>
     <script src="_static/js/custom.js?v=956e5d78"></script>
@@ -48,7 +48,7 @@
   <div class="fd-subnav-inner">
     <button type="button" class="fd-icon-button fd-sidebar-toggle" aria-controls="fd-sidebar" aria-expanded="false" aria-label="Toggle navigation" title="Toggle navigation">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="fd-icon "><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
-    </button><a class="fd-brand" href="#"><span class="fd-brand-name">spaday-dagre v0.3.0</span>
+    </button><a class="fd-brand" href="#"><span class="fd-brand-name">spaday-dagre v0.3.1</span>
 </a>
 
     <div class="fd-nav-actions">
@@ -63,7 +63,7 @@
 
 <aside id="fd-sidebar" aria-label="Documentation">
   <div class="fd-sidebar-header">
-    <div class="fd-sidebar-brand-row"><a class="fd-brand" href="#"><span class="fd-brand-name">spaday-dagre v0.3.0</span>
+    <div class="fd-sidebar-brand-row"><a class="fd-brand" href="#"><span class="fd-brand-name">spaday-dagre v0.3.1</span>
 </a>
       <button type="button" class="fd-icon-button fd-sidebar-collapse" aria-label="Collapse sidebar" title="Collapse sidebar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="fd-icon "><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg></button>
     </div>
@@ -208,8 +208,8 @@ falls back to the graph’s natural height, with a one-time console warning.</p>
 
 <span class="n">graph</span> <span class="o">=</span> <span class="n">Dagre</span><span class="p">(</span>
     <span class="n">graph</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">"nodes"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"a"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Alpha"</span><span class="p">},</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">:</span> <span class="s2">"diamond"</span><span class="p">}],</span>
-        <span class="s2">"edges"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"a"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"flow"</span><span class="p">}],</span>
+        <span class="s2">"nodes"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"a"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Alpha"</span><span class="p">,</span> <span class="s2">"tooltip"</span><span class="p">:</span> <span class="s2">"Start here"</span><span class="p">},</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">:</span> <span class="s2">"diamond"</span><span class="p">}],</span>
+        <span class="s2">"edges"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"a"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"flow"</span><span class="p">,</span> <span class="s2">"tooltip"</span><span class="p">:</span> <span class="s2">"Continue to b"</span><span class="p">}],</span>
     <span class="p">},</span>
     <span class="n">layout</span><span class="o">=</span><span class="p">{</span><span class="s2">"rankdir"</span><span class="p">:</span> <span class="s2">"LR"</span><span class="p">},</span>
     <span class="n">controls</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -223,6 +223,11 @@ label-driven width: wider labels are ellipsized, with the full label as a native
 passes through to dagre (<code class="docutils literal notranslate"><span class="pre">rankdir</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>, <code class="docutils literal notranslate"><span class="pre">nodesep</span></code>,
 <code class="docutils literal notranslate"><span class="pre">ranksep</span></code>, <code class="docutils literal notranslate"><span class="pre">edgesep</span></code>, <code class="docutils literal notranslate"><span class="pre">marginx</span></code>/<code class="docutils literal notranslate"><span class="pre">marginy</span></code>, <code class="docutils literal notranslate"><span class="pre">ranker</span></code>). Installing the package registers the <code class="docutils literal notranslate"><span class="pre">dagre</span></code>
 entry point, so <code class="docutils literal notranslate"><span class="pre">packages=[&quot;dagre&quot;]</span></code> also works.</p>
+<p>Nodes, clusters, and edges accept a plain-text <code class="docutils literal notranslate"><span class="pre">tooltip</span></code>. Hovering a node shape, edge line,
+or edge label shows the text in a popup that follows the pointer within the graph. Newlines
+are preserved; HTML is displayed as text. Tooltips update when <code class="docutils literal notranslate"><span class="pre">graph</span></code> changes and hide on
+pointer exit, pan, zoom, or removal. An ellipsized node label supplies its full text when no
+custom tooltip is set.</p>
 <p>A node with <code class="docutils literal notranslate"><span class="pre">parent</span></code> nests inside the cluster named by another node’s id (dagre’s compound
 layout): the cluster renders as a rounded container behind its children, labeled along its top
 edge, and clicks/right-clicks on it dispatch the node events with the same detail shape.

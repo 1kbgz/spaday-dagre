@@ -57,8 +57,8 @@ from spaday_dagre import Dagre, package
 
 graph = Dagre(
     graph={
-        "nodes": [{"id": "a", "label": "Alpha"}, {"id": "b", "shape": "diamond"}],
-        "edges": [{"source": "a", "target": "b", "label": "flow"}],
+        "nodes": [{"id": "a", "label": "Alpha", "tooltip": "Start here"}, {"id": "b", "shape": "diamond"}],
+        "edges": [{"source": "a", "target": "b", "label": "flow", "tooltip": "Continue to b"}],
     },
     layout={"rankdir": "LR"},
     controls=True,
@@ -72,6 +72,12 @@ label-driven width: wider labels are ellipsized, with the full label as a native
 passes through to dagre (`rankdir`, `align`, `nodesep`,
 `ranksep`, `edgesep`, `marginx`/`marginy`, `ranker`). Installing the package registers the `dagre`
 entry point, so `packages=["dagre"]` also works.
+
+Nodes, clusters, and edges accept a plain-text `tooltip`. Hovering a node shape, edge line,
+or edge label shows the text in a popup that follows the pointer within the graph. Newlines
+are preserved; HTML is displayed as text. Tooltips update when `graph` changes and hide on
+pointer exit, pan, zoom, or removal. An ellipsized node label supplies its full text when no
+custom tooltip is set.
 
 A node with `parent` nests inside the cluster named by another node's id (dagre's compound
 layout): the cluster renders as a rounded container behind its children, labeled along its top
